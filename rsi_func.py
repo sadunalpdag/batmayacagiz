@@ -5,6 +5,7 @@ countrsi=0
 def rsi(data,price_coin_now,lenrsi):
     global countrsi
     macd1 = ta.rsi(data['close'], length=14)
+    macd2 = ta.rsi(data['close'], length=28)
 
 
 
@@ -16,14 +17,14 @@ def rsi(data,price_coin_now,lenrsi):
                 countrsi = 1
                 tele.telegram_bot(macd1.iloc[-1])
                 tele.telegram_bot(macd2.iloc[-1])
-                tele.telegram_bot(coiprice)
+
 
             elif macd1.iloc[-1] > 70:
                 print('sell btc rsi 70 altı')
                 countrsi = 1
                 tele.telegram_bot(macd1.iloc[-1])
                 tele.telegram_bot(macd2.iloc[-1])
-                tele.telegram_bot(coiprice)
+
 
         elif macd1.iloc[-1] in range(30, 69):
             countrsi = 0
