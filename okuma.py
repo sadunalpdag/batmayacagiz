@@ -1,10 +1,10 @@
 # importing the module
 import csv
-import numpy as np
+
 
 
 # open the file in read mode
-filename = open('BTCUSDT-1h-2022-01.csv', 'r')
+filename = open('BTCBUSD-30m-2022-02-20.csv', 'r')
 
 # creating dictreader object
 file = csv.DictReader(filename)

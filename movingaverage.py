@@ -1,11 +1,11 @@
-import pandas_ta
+import pandas_ta as ta
 
 import send_msg as tele
 count_mov_avrage_ulasti=0
-def movingaverage(array,price_coin_now):
+def movingaverage(data,price_coin_now):
     global count_mov_avrage_ulasti
 
-    mov50 = array.ta.sma(50)
+    mov50 = ta.sma( data['close'], length=10)
 
     average50=mov50.iloc[-1]
 
@@ -22,4 +22,4 @@ def movingaverage(array,price_coin_now):
     elif     movingaverageresult < 0.995 and movingaverageresult>1.005 :
              count_mov_avrage_ulasti=0
 
-    return [movingaverageresult,mov50]
+    return [movingaverageresult,average50]
