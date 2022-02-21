@@ -32,10 +32,10 @@ for col in file:
 
 High=[float(x) for x in High]
 print('highmat =',High)
-Open=[float(x) for x in Open]
-print('Openmat =',High)
-Low=[float(x) for x in Low]
-print('Lowmat =',High)
-Close=[float(x) for x in Close]
-print('matris =',High)
+Open=[float(y) for y in Open]
+print('Openmat =',Open)
+Low=[float(z) for z in Low]
+print('Lowmat =',Low)
+Close=[float(m) for m in Close]
+print('matris =',Close)
 
