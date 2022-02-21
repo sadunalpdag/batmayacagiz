@@ -11,7 +11,7 @@ def movingaverage(data,price_coin_now):
 
     movingaverageresult=price_coin_now/average50
     if count_mov_avrage_ulasti==0:
-        if movingaverageresult > 0.995 and movingaverageresult<1 :
+        if movingaverageresult > 0.996 and movingaverageresult<1 :
             count_mov_avrage_ulasti=1
             tele.telegram_bot('ortalamaya ulasti')
             tele.telegram_bot(price_coin_now)
