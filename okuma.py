@@ -4,7 +4,7 @@ import csv
 
 
 # open the file in read mode
-filename = open('BTCBUSD-30m-2022-02-20.csv', 'r')
+filename = open('BTCBUSD-30m-2022-02-205.csv', 'r')
 
 # creating dictreader object
 file = csv.DictReader(filename)

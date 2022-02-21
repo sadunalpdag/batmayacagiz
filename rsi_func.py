@@ -8,7 +8,7 @@ def rsi(data,price_coin_now,lenrsi):
 
 
 
-    if lenrsi > 90:
+    if lenrsi > 50:
         if countrsi == 0:
 
             if macd1.iloc[-1] < 30:
