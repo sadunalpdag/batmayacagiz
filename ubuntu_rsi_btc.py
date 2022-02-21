@@ -23,7 +23,7 @@ series = range(49)
 
 
 def price():
-    time.sleep(1800)
+    time.sleep(15)
     global countrsi
 
     client = Client(api_key=key.Pkey, api_secret=key.Skey)
