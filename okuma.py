@@ -35,7 +35,7 @@ print('highmat =',High)
 Open=[float(y) for y in Open]
 print('Openmat =',Open)
 Low=[float(z) for z in Low]
-print('Lowmat =',Low)
+print('lowmat =',Low)
 Close=[float(m) for m in Close]
 print('matris =',Close)
 
