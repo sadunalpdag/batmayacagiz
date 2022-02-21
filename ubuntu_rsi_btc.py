@@ -8,6 +8,7 @@ import numpy as np
 from scipy.stats import linregress
 import movingaverage as mov
 import supertrend_func as stfunc
+import rsi_func as rsi
 
 highmat = [40139.91, 39991.6, 39960.0, 40030.68, 40031.97, 39995.13, 39910.62, 39880.93, 39861.08, 39770.0, 39710.4, 39612.24, 39452.03, 39064.04, 38900.0, 38847.94, 38853.64, 38446.35, 38440.72, 38282.29, 38370.83, 38398.2, 38307.58, 38373.82, 38630.31, 38395.6, 38323.97, 38350.0, 38318.2, 38233.0, 38313.32, 38431.9, 38524.11, 38445.0, 38420.32, 38346.93, 38399.27, 38472.18, 38463.17, 38446.56, 38417.14, 38375.99, 38376.0, 38274.4, 38400.28, 38874.01, 38988.8, 38763.11]
 Openmat = [40104.17, 39948.65, 39945.31, 39938.79, 40009.76, 39995.12, 39857.15, 39837.2, 39813.91, 39741.6, 39571.79, 39598.84, 39373.72, 39007.87, 38813.47, 38768.16, 38816.32, 38396.43, 38183.52, 38162.59, 38207.09, 38358.04, 38207.65, 38225.29, 38362.47, 38344.6, 38231.52, 38253.68, 38224.45, 38203.37, 38215.37, 38255.51, 38356.0, 38442.27, 38289.9, 38292.14, 38292.39, 38324.66, 38463.17, 38412.43, 38417.14, 38290.77, 38338.46, 38112.86, 38257.92, 38330.49, 38837.05, 38614.54]
@@ -22,7 +23,7 @@ series = range(49)
 
 
 def price():
-    time.sleep(1800)
+    time.sleep(3)
     global countrsi
 
     client = Client(api_key=key.Pkey, api_secret=key.Skey)
@@ -51,8 +52,8 @@ def price():
 
     percent = round(float(x1 / y1), 5)
     print(percent)
-    lenght_rsi = len(matris)
 
+    lenght_rsi = len(matris)
     data = pd.DataFrame(matris, columns=['close'])
     data4 = pd.DataFrame(highmat, columns=['high'])
     data3 = pd.DataFrame(lowmat, columns=['low'])
@@ -64,6 +65,11 @@ def price():
 
     print('stperc',stresult[0])
     print('stresul',stresult[1])
+
+    rsiresult = rsi.rsi(data, x11,lenght_rsi)
+
+    print('rsilast', rsiresult)
+
 
     movingaverageresult = mov.movingaverage(data, x11)
 
@@ -86,37 +92,7 @@ def price():
 
     print(data2.tail(10))
 
-    print(lenght_rsi)
-    if lenght_rsi > 50:
-        if countrsi == 0:
 
-            if macd1.iloc[-1] < 30:
-                print('buy Btc rsi 30 altı')
-                countrsi = 1
-                tele.telegram_bot(macd1.iloc[-1])
-                tele.telegram_bot(macd2.iloc[-1])
-                tele.telegram_bot(coiprice)
-
-            elif macd1.iloc[-1] > 70:
-                print('sell btc rsi 70 altı')
-                countrsi = 1
-                tele.telegram_bot(macd1.iloc[-1])
-                tele.telegram_bot(macd2.iloc[-1])
-                tele.telegram_bot(coiprice)
-
-        elif macd1.iloc[-1] in range(30, 69):
-            countrsi = 0
-
-    if lenght_rsi > 50:
-        if percent < 0.99:
-            tele.telegram_bot(macd1.iloc[-1])
-            tele.telegram_bot(macd2.iloc[-1])
-            tele.telegram_bot(coiprice)
-
-        elif percent > 1.01:
-            tele.telegram_bot(macd1.iloc[-1])
-            tele.telegram_bot(macd2.iloc[-1])
-            tele.telegram_bot(coiprice)
 
     if x1 > y1:
         print('yukseliyor')
