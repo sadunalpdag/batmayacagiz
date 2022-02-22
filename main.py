@@ -10,7 +10,7 @@ import pandas_ta as ta
 
 
 
-help(ta.ema
+help(ta.fisher
 
 
 

@@ -2,7 +2,7 @@ import pandas_ta as ta
 
 import send_msg as tele
 countrsi=0
-def rsi(data,price_coin_now,lenrsi):
+def rsi(data,lenrsi):
     global countrsi
     macd1 = ta.rsi(data['close'], length=14)
     macd2 = ta.rsi(data['close'], length=28)
@@ -27,6 +27,11 @@ def rsi(data,price_coin_now,lenrsi):
 
 
         elif macd1.iloc[-1] in range(30, 69):
+            countrsi = 0
+
+
+        if countrsi == 1 and macd1.iloc[-1] not in range(30, 69):
+
             countrsi = 0
 
 

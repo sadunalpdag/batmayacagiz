@@ -9,6 +9,7 @@ from scipy.stats import linregress
 import movingaverage as mov
 import supertrend_func as stfunc
 import rsi_func as rsi
+import fisher_inv_func as fisher
 
 highmat = [40139.91, 39991.6, 39960.0, 40030.68, 40031.97, 39995.13, 39910.62, 39880.93, 39861.08, 39770.0, 39710.4, 39612.24, 39452.03, 39064.04, 38900.0, 38847.94, 38853.64, 38446.35, 38440.72, 38282.29, 38370.83, 38398.2, 38307.58, 38373.82, 38630.31, 38395.6, 38323.97, 38350.0, 38318.2, 38233.0, 38313.32, 38431.9, 38524.11, 38445.0, 38420.32, 38346.93, 38399.27, 38472.18, 38463.17, 38446.56, 38417.14, 38375.99, 38376.0, 38274.4, 38400.28, 38874.01, 38988.8, 38763.11]
 Openmat = [40104.17, 39948.65, 39945.31, 39938.79, 40009.76, 39995.12, 39857.15, 39837.2, 39813.91, 39741.6, 39571.79, 39598.84, 39373.72, 39007.87, 38813.47, 38768.16, 38816.32, 38396.43, 38183.52, 38162.59, 38207.09, 38358.04, 38207.65, 38225.29, 38362.47, 38344.6, 38231.52, 38253.68, 38224.45, 38203.37, 38215.37, 38255.51, 38356.0, 38442.27, 38289.9, 38292.14, 38292.39, 38324.66, 38463.17, 38412.43, 38417.14, 38290.77, 38338.46, 38112.86, 38257.92, 38330.49, 38837.05, 38614.54]
@@ -20,9 +21,10 @@ rsi_current = 0
 rsi_son_float = 0
 countrsi = 0
 series = range(49)
-
+print('working')
 
 def price():
+
     time.sleep(15)
     global countrsi
 
@@ -65,10 +67,22 @@ def price():
 
     print('stperc',stresult[0])
     print('stresul',stresult[1])
+    #tele.telegram_bot('Working')
 
-    rsiresult = rsi.rsi(data, x11,lenght_rsi)
+    rsiresult = rsi.rsi(data,lenght_rsi)
 
     print('rsilast', rsiresult)
+
+    inv_fisher =fisher.inv_fisher(data4,data3,lenght_rsi)
+
+    print('invfisher',inv_fisher)
+
+    with open ("result.dat","w+") as f:
+        f.write(str(stresult[1]))
+        f.write(str(inv_fisher))
+
+
+
 
 
     movingaverageresult = mov.movingaverage(data, x11)
