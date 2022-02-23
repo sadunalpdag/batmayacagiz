@@ -1,0 +1,2 @@
+matris=matris1+matris2+matris3+matris4+matris5+matris6+matris7+matris8+matris9+matris10+matris11+matris12
+print(matris)

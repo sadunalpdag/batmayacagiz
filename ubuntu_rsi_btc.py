@@ -96,6 +96,7 @@ def price():
     macd3 = ta.macd(data['close'], fast=14, slow=28)
 
 
+
     # print(macd3 )
     data2 = pd.concat([data, macd1, macd2, macd3,data3,data4], axis=1)
 
@@ -104,7 +105,7 @@ def price():
 
 
 
-    print(data2.tail(10))
+    print(data2)
 
 
 
