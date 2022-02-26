@@ -1,5 +1,6 @@
 import pandas_ta as ta
 
+
 import send_msg as tele
 count_supertrend=0
 def supertrend(data4,data3,data,price_coin_now):
@@ -10,18 +11,21 @@ def supertrend(data4,data3,data,price_coin_now):
     stlast= (ser_singleCol2.iloc[-1])  # bunu ile dataframedeki son syaıyı alıyorum
     print(stlast)
 
+    adx_rs= ta.adx(data4['high'], data3['low'], data['close'])
+    adx_singleCol2 = adx_rs.iloc[:, 0]
+
 
     supertrendesult=price_coin_now/stlast
     if count_supertrend==0:
-        if supertrendesult > 0.995 and movingaverageresult<1 :
+        if supertrendesult > 0.995 and supertrendesult<1 :
             count_supertrend=1
             tele.telegram_bot('supertrend yakın  sell')
-        elif supertrendesult > 1.001 and movingaverageresult<1.005 :
+        elif supertrendesult > 1.001 and supertrendesult<1.005 :
             count_supertrend=1
             tele.telegram_bot('supertrend yakın buy')
 
             tele.telegram_bot(price_coin_now)
-    elif     supertrendesult < 0.995 and movingaverageresult>1.005 :
+    elif     supertrendesult < 0.995 and supertrendesult>1.005 :
              count_supertrend=0
 
-    return [supertrendesult,stlast]
+    return [supertrendesult,stlast,ser_singleCol2,adx_singleCol2]

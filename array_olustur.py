@@ -11,11 +11,15 @@ import supertrend_func as stfunc
 import rsi_func as rsi
 import fisher_inv_func as fisher
 import array_ekle
+import bband as bband
 
 highmat = array_ekle.highmat
 Openmat = array_ekle.Openmat
 lowmat =  array_ekle.lowmat
 matris =  array_ekle.matris
+bbandhigh=[]
+bbandlow=[]
+bbandmid=[]
 
 
 matrisn1 =matris[1:]
@@ -230,6 +234,10 @@ def price():
 
     print('stperc',stresult[0])
     print('stresul',stresult[1])
+
+
+    supertrend_mat=stresult[2]
+    adx_mat =stresult[3]
     #tele.telegram_bot('Working')
 
     rsiresult = rsi.rsi(data,lenght_rsi)
@@ -240,18 +248,23 @@ def price():
 
     print('invfisher',inv_fisher)
 
-    with open ("result.dat","w+") as f:
-        f.write(str(stresult[1]))
-        f.write(str(inv_fisher))
 
 
+    bbandresult = bband.bbands_result(data)
+    bbandlow_mat = bbandresult[0]
+    bbandmid_mat = bbandresult[1]
+    bbandhigh_mat = bbandresult[2]
 
 
+    print(bbandresult)
 
     movingaverageresult = mov.movingaverage(data, x11)
 
     print('movaverage perc',movingaverageresult[0])
     print('moving average',movingaverageresult[1])
+    moving_50=movingaverageresult[2]
+    moving_100=movingaverageresult[3]
+    moving_200=movingaverageresult[4]
 
     macd1 = ta.rsi(data['close'], length=14)
     # print(macd1)
@@ -261,10 +274,12 @@ def price():
 
 
     # print(macd3 )
-    data2 = pd.concat([data, macd1, macd2, macd3,data3,data4,fark122,fark123,fark124,fark125,fark126,fark127,fark128], axis=1)
+    data2 = pd.concat([data, macd1, macd2,moving_200,adx_mat,moving_100,moving_50, macd3,data3,data4,supertrend_mat,bbandlow_mat,bbandhigh_mat,bbandmid_mat,fark122,fark123,fark124,fark125,fark126,fark127,fark128], axis=1,)
+    data3= data2.applymap("{0:.6f}".format)
 
-    ys = np.array(y, dtype=np.float64)
-    xs = np.array(series, dtype=int)
+    data3.to_csv(r'C:\Users\rage\PycharmProjects\batmayacagiz\export_dataframe.csv', index=False, header=True)
+
+
 
 
 
