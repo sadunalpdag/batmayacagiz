@@ -2,17 +2,16 @@
 
 import tweepy
 import time
+
+import key
 import send_msg as tele
-consumer_key = "fie98c2LclARc8lH2XdhANREw"
-consumer_secret = "zZkNseihPjGPkqR1PUWvlh65tZujhuIDIlj77IyR7zGBAbNO5n"
-access_token = "158798447-S3TetLOSzw5FlGbO2DuC2S7l1vaTeC9WGK5MWecj"
-access_token_secret = "eJSiJwMkG5wg39sEPmOcmnKZlxkfdSO0y1IgvsOyppVbD"
+
 liste_id=['0']
 def signal():
 
     time.sleep(60)
-    auth = tweepy.OAuth1UserHandler(consumer_key, consumer_secret)
-    auth.set_access_token(access_token, access_token_secret)
+    auth = tweepy.OAuth1UserHandler(consumer_key=key.consumer_key, consumer_secret=key.consumer_secret)
+    auth.set_access_token(access_token=key.access_token, access_token_secret=key.access_token_secret)
     api = tweepy.API(auth)
     username='TheCoinMonitor_'
     tweets_list= api.user_timeline(screen_name=username, count=2)
