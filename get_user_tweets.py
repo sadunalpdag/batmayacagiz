@@ -27,7 +27,7 @@ def signal():
 
     api = tweepy.API(auth)
     username='TheCoinMonitor_'
-    tweets_list= api.user_timeline(screen_name=username, count=2)
+    tweets_list= api.user_timeline(screen_name=username, count=2) #sadece 2 adet tweet cektik 
     print (liste_id[0])
     tweet_last=tweets_list[0]
     tweet= tweets_list[1]
@@ -40,7 +40,7 @@ def signal():
             print(liste_id)
 
 
-            price=client.futures_symbol_ticker(symbol='ETHUSDT')
+            price=client.futures_symbol_ticker(symbol='ETHUSDT')# coiprice sell price buy price için yeni bir class ac ve long short diye de 2 def ekle
             coiprice = format(float(price['price']), )
             print (coiprice)
             coiprice_int =float(coiprice)
@@ -71,9 +71,8 @@ def signal():
 
                 workingType='MARK_PRICE',
                 positionSide='LONG',
-                side='BUY', # Direction ('BUY' / 'SELL'), string
-                quantity=0.01, # Number of coins you wish to buy / sell, float
-
+                side='BUY', 
+                quantity=0.01, # quantity bir dict den cekeceğiz
 
             )
             print ("x")
@@ -85,8 +84,8 @@ def signal():
                 closePosition=False,
                 workingType='MARK_PRICE',
                 positionSide='LONG',
-                side='SELL', # Direction ('BUY' / 'SELL'), string
-                quantity=0.01,# Number of coins you wish to buy / sell, float
+                side='SELL', 
+                quantity=0.01,
             )
             """
 
