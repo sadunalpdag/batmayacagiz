@@ -78,7 +78,7 @@ def signal():
 
             order_approve=func.open_order_number(symbol_func)
             print ("order approve",order_approve)
-
+            """"
             if order_approve==1:
                 try:
                     if position_direct =='LONGED':
@@ -89,6 +89,7 @@ def signal():
                     tele.telegram_bot('hata_oldu_devam')
             else:
                 tele.telegram_bot("islem sayisi 5 den fazla")
+                """
 
 
 
@@ -105,6 +106,8 @@ def signal():
         print ("balance 200 altında")
         tele.telegram_bot("balance 200 altında")
 
-schedule.every(30).seconds.do(signal)
+schedule.every(15).seconds.do(signal)
 while True:
     schedule.run_pending()
+if __name__ == "main":
+        signal()
