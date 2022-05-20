@@ -1,18 +1,20 @@
-from binance.client import Client
-import key
+import schedule
 import time
-import numpy as np
-import pandas as pd
-import pandas_ta as ta
+import tweepy
+
+from binance.client import Client
+
+
+import functions as func
+import signal_func as signals
+import time
+
+import key
+import send_msg as tele
+
+signals.signal()
 
 
 
 
 
-
-help(ta.adx
-
-
-
-
-     )
