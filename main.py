@@ -13,7 +13,8 @@ import time
 import key
 import send_msg as tele
 
-signals.signal()
+
+func.signals.signal()
 
 
 

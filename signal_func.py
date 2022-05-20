@@ -14,6 +14,8 @@ liste_id=['0']
 sayici = 0
 
 def signal():
+    time.sleep(30)
+
     global price_sell_new
     func.server_online() #server her bir saate telegram messaj
 
@@ -106,8 +108,12 @@ def signal():
         print ("balance 200 altında")
         tele.telegram_bot("balance 200 altında")
 
-schedule.every(15).seconds.do(signal)
+
 while True:
-    schedule.run_pending()
-if __name__ == "main":
+    signal()
+
+
+
+
+if __name__ == "__main__":
         signal()
