@@ -4,7 +4,8 @@ from binance.client import Client
 import pandas as pd
 import send_msg as tele
 import time
-import schedule
+import  gspread
+
 
 
 
@@ -14,7 +15,7 @@ result = client.futures_account_balance(asset='USDT')  # bir listeden asset cekt
 def open_order_number(symbol):
 
     order = client.futures_get_open_orders(symbol=symbol)
-    print (order)
+
     if (len(order))==0:
         order_give=1
     else:
@@ -37,7 +38,7 @@ def tweet_data(member_name):
     tweets_list = api.user_timeline(screen_name=username, count=2)
     tweet_last = tweets_list[0]
     tweet = tweets_list[1]
-    x = tweet.text
+    x = tweet_last.text
     n = x.split()
     print(n)
     symbol_tweet = n[1]
@@ -50,33 +51,39 @@ def checkKey(key):
             '$COMP': 'COMPUSDT',
             '$ONE':'ONEUSDT',
             '$ZEC':'ZECUSDT',
-            '$ETH ':'ETHUSDT',
+            '$ETH':'ETHUSDT',
             '$SAND':'SANDUSDT',
             '$LRC':'LRCUSDT',
-            '$SOL':'SOLUSDT',
-            '$TRX':'TRXUSDT',
+             '$TRX':'TRXUSDT',
             '$ALGO':'ALGOUSDT',
             '$ETC':'ETCUSDT',
             '$AVAX':'AVAXUSDT',
             '$DOT':'DOTUSDT',
             '$AR':'ARUSDT',
-            '$RUNE':'RUNEUSDT'}
+            '$RUNE':'RUNEUSDT',
+            '$XRP':'XRPUSDT',
+            '$THETA':'THETAUSDT',
+            '$CRV':'CRVUSDT',
+            '$ICP':'ICPUSDT'}
     dict1 = {'$SOL': 1,
              '$BTC': 0.001,
              '$COMP': 0.5,
              '$ONE': 80,
              '$ZEC': 0.25,
-             '$ETH ': 0.015,
+             '$ETH': 0.015,
              '$SAND' :25,
              '$LRC' :50,
-             '$SOL':1,
              '$TRX':200,
              '$ALGO':80,
              '$ETC':1.5,
              '$AVAX':1,
              '$DOT':3,
              '$AR':2,
-             '$RUNE':10}
+             '$RUNE':10,
+             '$XRP':60,
+             '$THETA':20,
+             '$CRV':22,
+             '$ICP':4}
     if key in dict.keys():
         #print("Present, ", end=" ")
         #print("value =", dict[key])
@@ -117,19 +124,20 @@ def long_position (symbol,quantity,price_sell_new):
     client.futures_create_order(
         symbol=symbol,
         type='MARKET',
-
+        recvWindow=25000,
         workingType='MARK_PRICE',
         positionSide='LONG',
         side='BUY',  # Direction ('BUY' / 'SELL'), string
         quantity=quantity,  # Number of coins you wish to buy / sell, float
 
     )
-
+    time.sleep(1)
     client.futures_create_order(
         symbol=symbol,
         stopPrice=price_sell_new,
         price=price_sell_new,
         type='TAKE_PROFIT',
+        recvWindow=25000,
         closePosition=False,
         workingType='MARK_PRICE',
         positionSide='LONG',
@@ -142,18 +150,19 @@ def short_position (symbol,quantity,price_sell_new):
     client.futures_create_order(
         symbol=symbol,
         type='MARKET',
-
+        recvWindow=25000,
         workingType='MARK_PRICE',
         positionSide='SHORT',
         side='SELL',  # Direction ('BUY' / 'SELL'), string
         quantity=quantity,  # Number of coins you wish to buy / sell, float
 
     )
-
+    time.sleep(1)
     client.futures_create_order(
         symbol=symbol,
         stopPrice=price_sell_new,
         price=price_sell_new,
+        recvWindow=25000,
         type='TAKE_PROFIT',
         closePosition=False,
         workingType='MARK_PRICE',
@@ -171,6 +180,19 @@ def server_online():
     if sayici == 120:
         sayici = 0
         tele.telegram_bot("server online")
+
+def sheets_add(balance):
+    gc =gspread.service_account(filename='credentials.json')
+
+    sh = gc.open_by_key('15IDisjoICpEu6t2ByuRmsjwK8KyEFOuTCCPMgbt1oxo')
+    worksheet =sh.sheet1
+    res2= worksheet.get('A2')
+    res1=res2[0]
+    res_str=res1[0]
+    res =int(res_str)
+    worksheet.update_cell(6,2,balance)
+
+    return(res)
 
 
 
