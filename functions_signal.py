@@ -35,6 +35,7 @@ def volume_trader():
         key_def = func.checkKey(symbol_tweet)  # burada dict te olan coin kontrol
         symbol_func = key_def[0]
         quantity = key_def[1]
+
         print("quantity", quantity)
         # fonksiyonlardan sembol cekme
         print("symbol", symbol_func)

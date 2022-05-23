@@ -64,7 +64,11 @@ def checkKey(key):
             '$XRP':'XRPUSDT',
             '$THETA':'THETAUSDT',
             '$CRV':'CRVUSDT',
-            '$ICP':'ICPUSDT'}
+            '$ICP':'ICPUSDT',
+            '$LIT ':'LITUSDT',
+            '$EOS': 'EOSUSDT',
+            '$GMT':'GMTUSDT',
+            '$ATOM ':'ATOMUSDT'}
     dict1 = {'$SOL': 1,
              '$BTC': 0.001,
              '$COMP': 0.5,
@@ -83,7 +87,11 @@ def checkKey(key):
              '$XRP':60,
              '$THETA':20,
              '$CRV':22,
-             '$ICP':4}
+             '$ICP':4,
+             '$LIT ':40,
+             '$EOS':20,
+             '$GMT':21,
+             '$ATOM ':2}
     if key in dict.keys():
         #print("Present, ", end=" ")
         #print("value =", dict[key])
@@ -106,18 +114,21 @@ def price_sell_buy(price):
     price_buy = coiprice_int * 0.991
 
 
-    if coiprice_int > 1000:
+    if coiprice_int > 1000:  #sell price virgulden sonrası
         price_sell_new = round(price_sell, 0)
         price_buy_new = round(price_buy, 0)
     elif coiprice_int > 99 and coiprice_int < 1000:
         price_sell_new = round(price_sell, 3)
         price_buy_new = round(price_buy, 3)
+    elif coiprice_int >0.99 and coiprice_int <99:
+        price_sell_new = round(price_sell, 2)
+        price_buy_new = round(price_buy, 2)
     else:
         price_sell_new = round(price_sell, 4)
         price_buy_new = round(price_buy, 4)
 
     coipricex = round(quantity, 2)
-    print(coipricex)
+
     return [price_sell_new,price_buy_new]
 
 def long_position (symbol,quantity,price_sell_new):
@@ -190,6 +201,7 @@ def sheets_add(balance):
     res1=res2[0]
     res_str=res1[0]
     res =int(res_str)
+
     worksheet.update_cell(6,2,balance)
 
     return(res)
