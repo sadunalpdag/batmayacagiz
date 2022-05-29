@@ -104,25 +104,25 @@ def checkKey(key):
         print ("no symbol")
     return [symbol_come_func,quantity]
 
-def price_sell_buy(price):
+def price_sell_buy(price,buyperc,sellperc):
     coiprice = format(float(price['price']), )
 
     coiprice_int = float(coiprice)
 
     quantity = (35 / coiprice_int)
-    price_sell = coiprice_int * 1.01
-    price_buy = coiprice_int * 0.991
+    price_sell = coiprice_int * buyperc
+    price_buy = coiprice_int * sellperc
 
 
     if coiprice_int > 1000:  #sell price virgulden sonrası
         price_sell_new = round(price_sell, 0)
         price_buy_new = round(price_buy, 0)
     elif coiprice_int > 99 and coiprice_int < 1000:
-        price_sell_new = round(price_sell, 3)
-        price_buy_new = round(price_buy, 3)
-    elif coiprice_int >0.99 and coiprice_int <99:
         price_sell_new = round(price_sell, 2)
         price_buy_new = round(price_buy, 2)
+    elif coiprice_int >0.1 and coiprice_int <99:
+        price_sell_new = round(price_sell, 3)
+        price_buy_new = round(price_buy, 3)
     else:
         price_sell_new = round(price_sell, 4)
         price_buy_new = round(price_buy, 4)
@@ -190,7 +190,7 @@ def server_online():
     print("sayici", sayici)
     if sayici == 120:
         sayici = 0
-        tele.telegram_bot("server online")
+        tele.telegram_bot("server online11")
 
 def sheets_add(balance):
     gc =gspread.service_account(filename='credentials.json')
@@ -205,8 +205,6 @@ def sheets_add(balance):
     worksheet.update_cell(6,2,balance)
 
     return(res)
-
-
 
 
 

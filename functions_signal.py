@@ -7,12 +7,12 @@ import time
 
 import key
 import send_msg as tele
-import schedule
+
 import time
 
 liste_id=['0']
 def volume_trader():
-    time.sleep(10)
+
 
     try:
         func.server_online()  # server her bir saate telegram messaj
@@ -59,9 +59,11 @@ def volume_trader():
                 print(price_sell_new)
                 order_approve = func.open_order_number(symbol_func)
                 print("order approve", order_approve)
+                """
                 if order_approve == 1:
-
+                
                     try:
+                    
                         if position_direct == 'LONGED':
                             func.long_position(symbol_func, quantity, price_sell_new)
                         else:
@@ -69,14 +71,15 @@ def volume_trader():
                     except:
 
                         tele.telegram_bot('hata_oldu_devam')
-
+                    
 
                 else:
                     tele.telegram_bot("islem sayisi 5 den fazla")
 
-                print(tweet.text)
-                print(tweet.id)
-                print(tweet.in_reply_to_screen_name)
+                    print(tweet.text)
+                    print(tweet.id)
+                    print(tweet.in_reply_to_screen_name)
+                """
         else:
             print("balance 200 altında")
 
@@ -84,5 +87,3 @@ def volume_trader():
 
         tele.telegram_bot('zamanda kayma oldu')
 
-while True:
-    volume_trader()
