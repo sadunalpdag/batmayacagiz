@@ -77,16 +77,16 @@ class Macdema():
         })
 
         try:
-            if self.shortgiris==1 or self.longgiris==1:
+            if self.shortgiris==1 or self.longgiris==1:#alıs satıstan sonra 100 cycledan sonra tekrar işleme açma
                 self.sayici_giris_control += 1
-                if self.sayici_giris_control ==200:
+                if self.sayici_giris_control ==100:
                     print(symbol,timeframe,self.sayici_giris_control)
                     self.longgiris=0
                     self.shortgiris=0
 
 
             else:
-                bars = exchange.fetch_ohlcv(symbol, timeframe=timeframe, since=None, limit=100)
+                bars = exchange.fetch_ohlcv(symbol, timeframe=timeframe, since=None, limit=40)#son 40 price cek pd yap
                 df = pd.DataFrame(bars, columns=["timestamp", "open", "high", "low", "close", "volume"])
 
 
@@ -98,8 +98,8 @@ class Macdema():
 
 
 
-                x = (macddf.iloc[:, 1])
-                self.macdlast = (x.iloc[-1])
+                x = (macddf.iloc[:, 1]) #pd 1. colonu al
+                self.macdlast = (x.iloc[-1]) #pd 1. kolon son item
                 print(symbol)
                 print(self.macdlast)
                 df["slow macd"] = macddf.iloc[:, 0]
@@ -127,7 +127,8 @@ class Macdema():
                                 df["macd"][len(df.index) - 3] > df["slow macd"][len(df.index) - 3] and df["macd"][
                             len(df.index) - 2] < df["slow macd"][len(df.index) - 2]):
                             self.kesisimmacdsayac += 1
-                            tele.telegram_bot("macdkesisim")
+                            macdkesisim = "macdkesisim"" "+ self.symbol+" "+ self.timeframe
+                            tele.telegram_bot(macdkesisim)
                             print(df["macd"])
                             print(df["slow macd"])
                             print(symbol, "macdkesisim",self.kesisimmacdsayac)
@@ -140,7 +141,8 @@ class Macdema():
                                 df["Fast Ema"][len(df.index) - 3] > df["Slow Ema"][len(df.index) - 3] and df["Fast Ema"][
                             len(df.index) - 2] < df["Slow Ema"][len(df.index) - 2]):
                             self.kesisimmovaverage += 1
-                            tele.telegram_bot("movkesisim")
+                            movkesisim = "movkesisim"+" "+ self.symbol+" "+self.timeframe
+                            tele.telegram_bot(movkesisim)
                             print(df["Slow Ema"])
                             print(df["Fast Ema"])
                             print(symbol,"movkesisim",self.kesisimmovaverage)
@@ -156,7 +158,7 @@ class Macdema():
                         print("order approve", order_approve)
                         print("quantity",self.quantity)
 
-                        if balance > 200:
+                        if balance > 250:
                             if self.kesisimmovaverage == 1 and self.kesisimmacdsayac == 1:
                                 if order_approve == 1:
                                     if self.macdlast > 0:
@@ -182,8 +184,9 @@ class Macdema():
                                         self.shortgiris += 1
                                         print(symbol, shortgiris, "alis_sonrasi")
 
-                            else:
-                                tele.telegram_bot("islem sayisi 5 den fazlastrtegy2")
+                                else:
+                                    islemfazla="islem sayisi 5 den fazlastrtegy2"+" "+ self.symbol+" "+self.timeframe
+                                    tele.telegram_bot(islemfazla)
                         else:
                             print("balance 200 altında")
 
@@ -194,12 +197,16 @@ class Macdema():
 
 
 
+
+
+
 coin2=Macdema('ETHUSDT',"1h",0.015,1.01,0.991)
 coin1=Macdema('BTCUSDT',"1h",0.001,1.01,0.991)
 coin3=Macdema('ATOMUSDT',"1h",2,1.01,0.991)
 coin4=Macdema('EOSUSDT',"1h",20,1.01,0.991)
 coin5=Macdema('LITUSDT',"1h",40,1.01,0.991)
-coin6=Macdema('ICPUSDT',"1h",4,1.01,0.991)
+coin6=Macdema('BNBUSDT',"1h",0.1,1.01,0.991)
+
 coin7=Macdema('CRVUSDT',"1h",22,1.01,0.991)
 coin8=Macdema('THETAUSDT',"1h",20,1.01,0.991)
 coin9=Macdema('XRPUSDT',"1h",60,1.01,0.991)
@@ -211,13 +218,17 @@ coin14=Macdema('ALGOUSDT',"1h",80,1.01,0.991)
 coin15=Macdema('TRXUSDT',"1h",200,1.01,0.991)
 coin16=Macdema('LRCUSDT',"1h",50,1.01,0.991)
 coin17=Macdema('SANDUSDT',"1h",25,1.01,0.991)
+coin18=Macdema('AVAXUSDT',"1h",1,1.01,0.991)
+coin19=Macdema('ALGOUSDT',"1h",75,1.01,0.991)
+coin20=Macdema('ZECUSDT',"1h",0.3,1.01,0.991)
 
 coin2a=Macdema('ETHUSDT',"15m",0.015,1.007,0.993)
 coin1a=Macdema('BTCUSDT',"15m",0.001,1.007,0.993)
 coin3a=Macdema('ATOMUSDT',"15m",2,1.007,0.993)
 coin4a=Macdema('EOSUSDT',"15m",20,1.007,0.993)
 coin5a=Macdema('LITUSDT',"15m",40,1.007,0.993)
-coin6a=Macdema('ICPUSDT',"15m",4,1.007,0.993)
+coin6a=Macdema('BNBUSDT',"15m",0.1,1.007,0.9993)
+
 coin7a=Macdema('CRVUSDT',"15m",22,1.007,0.993)
 coin8a=Macdema('THETAUSDT',"15m",20,1.007,0.993)
 coin9a=Macdema('XRPUSDT',"15m",60,1.007,0.993)
@@ -229,13 +240,18 @@ coin14a=Macdema('ALGOUSDT',"15m",80,1.007,0.993)
 coin15a=Macdema('TRXUSDT',"15m",200,1.007,0.993)
 coin16a=Macdema('LRCUSDT',"15m",50,1.007,0.993)
 coin17a=Macdema('SANDUSDT',"15m",25,1.007,0.993)
+coin18a=Macdema('AVAXUSDT',"15m",1,1.007,0.993)
+coin19a=Macdema('ALGOUSDT',"15m",75,1.007,0.993)
+coin20a=Macdema('ZECUSDT',"15m",0.3,1.007,0.993)
+
 
 coin2b=Macdema('ETHUSDT',"4h",0.015,1.015,0.985)
 coin1b=Macdema('BTCUSDT',"4h",0.001,1.015,0.985)
 coin3b=Macdema('ATOMUSDT',"4h",2,1.015,0.985)
 coin4b=Macdema('EOSUSDT',"4h",20,1.015,0.985)
 coin5b=Macdema('LITUSDT',"4h",40,1.015,0.985)
-coin6b=Macdema('ICPUSDT',"4h",4,1.015,0.985)
+coin6b=Macdema('BNBUSDT',"4h",0.1,1.015,0.985)
+
 coin7b=Macdema('CRVUSDT',"4h",22,1.015,0.985)
 coin8b=Macdema('THETAUSDT',"4h",20,1.015,0.985)
 coin9b=Macdema('XRPUSDT',"4h",60,1.015,0.985)
@@ -247,6 +263,9 @@ coin14b=Macdema('ALGOUSDT',"4h",80,1.015,0.985)
 coin15b=Macdema('TRXUSDT',"4h",200,1.015,0.985)
 coin16b=Macdema('LRCUSDT',"4h",50,1.015,0.985)
 coin17b=Macdema('SANDUSDT',"4h",25,1.015,0.985)
+coin18b=Macdema('AVAXUSDT',"4h",1,1.015,0.985)
+coin19b=Macdema('ALGOUSDT',"4h",75,1.015,0.985)
+coin20b=Macdema('ZECUSDT',"4h",0.3,1.015,0.985)
 
 while True:
 
@@ -260,7 +279,7 @@ while True:
     time.sleep(10)
     coin5.dfall('LITUSDT',"1h")
     time.sleep(10)
-    coin6.dfall('ICPUSDT',"1h")
+    coin6.dfall('BNBUSDT', "1h")
     time.sleep(10)
     coin7.dfall('CRVUSDT',"1h")
     time.sleep(10)
@@ -283,7 +302,13 @@ while True:
     coin16.dfall('LRCUSDT',"1h")
     time.sleep(10)
     coin17.dfall('SANDUSDT',"1h")
-
+    time.sleep(10)
+    coin18.dfall('AVAXUSDT', "1h")
+    time.sleep(10)
+    coin19.dfall('ALGOUSDT', "1h")
+    time.sleep(10)
+    coin20.dfall('ZECUSDT', "1h")
+    time.sleep(10)
     coin2a.dfall('ETHUSDT', "15m")
     time.sleep(10)
     coin1a.dfall('BTCUSDT', "15m")
@@ -294,7 +319,7 @@ while True:
     time.sleep(10)
     coin5a.dfall('LITUSDT', "15m")
     time.sleep(10)
-    coin6a.dfall('ICPUSDT', "15m")
+    coin6a.dfall('BNBUSDT', "15m")
     time.sleep(10)
     coin7a.dfall('CRVUSDT', "15m")
     time.sleep(10)
@@ -317,7 +342,13 @@ while True:
     coin16a.dfall('LRCUSDT', "15m")
     time.sleep(10)
     coin17a.dfall('SANDUSDT', "15m")
-
+    time.sleep(10)
+    coin18a.dfall('AVAXUSDT', "15m")
+    time.sleep(10)
+    coin19a.dfall('ALGOUSDT', "15m")
+    time.sleep(10)
+    coin20a.dfall('ZECUSDT', "15m")
+    time.sleep(10)
     coin2b.dfall('ETHUSDT', "4h")
     time.sleep(10)
     coin1b.dfall('BTCUSDT', "4h")
@@ -328,7 +359,7 @@ while True:
     time.sleep(10)
     coin5b.dfall('LITUSDT', "4h")
     time.sleep(10)
-    coin6b.dfall('ICPUSDT', "4h")
+    coin6b.dfall('BNBUSDT', "4h")
     time.sleep(10)
     coin7b.dfall('CRVUSDT', "4h")
     time.sleep(10)
@@ -351,6 +382,12 @@ while True:
     coin16b.dfall('LRCUSDT', "4h")
     time.sleep(10)
     coin17b.dfall('SANDUSDT', "4h")
+    time.sleep(10)
+    coin18b.dfall('AVAXUSDT', "4h")
+    time.sleep(10)
+    coin19b.dfall('ALGOUSDT', "4h")
+    time.sleep(10)
+    coin20b.dfall('ZECUSDT', "4h")
 
 
 
