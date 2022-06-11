@@ -8,9 +8,11 @@ import pandas_ta as ta
 import functions as func
 import key
 from binance.client import Client
-
-
 import gspread
+
+
+
+
 
 kesisimmacdsayac =0
 kesisimmovaverage =0
@@ -39,23 +41,22 @@ class Macdema():
         self.buyvalue=buyvalue
         self.sellvalue=sellvalue
 
-
-    """
-    def addspread(self,sheetsymbolx,sheetsymboly,movkesx,movkesy,
-                  macdkesx,macdkesy,shortgirisx,shortgirisy,longirisx,
-                  longgirisy,sayicikontx,sayicikonty):
+    def addspread(self, sheetsymbolx, sheetsymboly, movkesx, movkesy,
+                  macdkesx, macdkesy, shortgirisx, shortgirisy, longirisx,
+                  longgirisy, sayicikontx, sayicikonty):
         gc = gspread.service_account(filename='credentials.json')
 
         sh = gc.open_by_key('1jRT7SlWoqaEscBFEz9835rsyrh9m1TNR_HfnGpItTHU')
         worksheet = sh.sheet1
         worksheet.update_cell(sheetsymbolx, sheetsymboly, self.symbol)
-        worksheet.update_cell(movkesx,movkesy,self.kesisimmovaverage)
-        worksheet.update_cell( macdkesx, macdkesy, self.kesisimmacdsayac)
+        worksheet.update_cell(movkesx, movkesy, self.kesisimmovaverage)
+        worksheet.update_cell(macdkesx, macdkesy, self.kesisimmacdsayac)
         worksheet.update_cell(shortgirisx, shortgirisy, self.shortgiris)
         worksheet.update_cell(longirisx, longgirisy, self.longgiris)
         worksheet.update_cell(sayicikontx, sayicikonty, self.sayici_giris_control)
 
-    """
+
+
 
 
 
@@ -79,7 +80,7 @@ class Macdema():
         try:
             if self.shortgiris==1 or self.longgiris==1:#alıs satıstan sonra 100 cycledan sonra tekrar işleme açma
                 self.sayici_giris_control += 1
-                if self.sayici_giris_control ==100:
+                if self.sayici_giris_control ==15:
                     print(symbol,timeframe,self.sayici_giris_control)
                     self.longgiris=0
                     self.shortgiris=0
@@ -94,14 +95,13 @@ class Macdema():
                 client = Client(api_key=key.Pkey, api_secret=key.Skey)
                 result = client.futures_account_balance(asset='USDT')  # bir listeden asset cektik
                 balance = float(result[6]['withdrawAvailable'])  # with drawal codu ile aldık
-                print (balance)
+
 
 
 
                 x = (macddf.iloc[:, 1]) #pd 1. colonu al
                 self.macdlast = (x.iloc[-1]) #pd 1. kolon son item
-                print(symbol)
-                print(self.macdlast)
+
                 df["slow macd"] = macddf.iloc[:, 0]
 
                 macd = MACD(df["close"])
@@ -115,9 +115,7 @@ class Macdema():
                 # LOAD FAST EMA
                 FastEma = EMAIndicator(df["close"], float(26))
                 df["Fast Ema"] = FastEma.ema_indicator()
-                print (symbol,self.shortgiris,self.timeframe)
-                print (symbol,self.longgiris,self.timeframe)
-                print (symbol,self.kesisimmovaverage,self.timeframe)
+
                 print (symbol,self.kesisimmacdsayac,self.timeframe)
 
                 if self.shortgiris!=1 and self.longgiris!=1:
@@ -158,7 +156,7 @@ class Macdema():
                         print("order approve", order_approve)
                         print("quantity",self.quantity)
 
-                        if balance > 250:
+                        if balance > 200:
                             if self.kesisimmovaverage == 1 and self.kesisimmacdsayac == 1:
                                 if order_approve == 1:
                                     if self.macdlast > 0:
@@ -244,6 +242,7 @@ coin18a=Macdema('AVAXUSDT',"15m",1,1.007,0.993)
 coin19a=Macdema('ALGOUSDT',"15m",75,1.007,0.993)
 coin20a=Macdema('ZECUSDT',"15m",0.3,1.007,0.993)
 
+"""
 
 coin2b=Macdema('ETHUSDT',"4h",0.015,1.015,0.985)
 coin1b=Macdema('BTCUSDT',"4h",0.001,1.015,0.985)
@@ -266,7 +265,7 @@ coin17b=Macdema('SANDUSDT',"4h",25,1.015,0.985)
 coin18b=Macdema('AVAXUSDT',"4h",1,1.015,0.985)
 coin19b=Macdema('ALGOUSDT',"4h",75,1.015,0.985)
 coin20b=Macdema('ZECUSDT',"4h",0.3,1.015,0.985)
-
+"""
 while True:
 
     coin2.dfall('ETHUSDT',"1h")
@@ -348,6 +347,56 @@ while True:
     coin19a.dfall('ALGOUSDT', "15m")
     time.sleep(10)
     coin20a.dfall('ZECUSDT', "15m")
+
+    coin2a.addspread(1, 1, 1, 2, 1, 3, 1, 4, 1, 5, 1, 6)
+    time.sleep(10)
+    coin1a.addspread(2, 1, 2, 2, 2, 3, 2, 4, 2, 5, 2, 6)
+    time.sleep(10)
+
+    coin3a.addspread(3, 1, 3, 2, 3, 3, 3, 4, 3, 5, 3, 6)
+    time.sleep(10)
+
+    coin4a.addspread(4, 1, 4, 2, 4, 3, 4, 4, 4, 5, 4, 6)
+    time.sleep(10)
+
+    coin5a.addspread(5, 1, 5, 2, 5, 3, 5, 4, 5, 5, 5, 6)
+    time.sleep(10)
+
+    coin6a.addspread(6, 1, 6, 2, 6, 3, 6, 4, 6, 5, 6, 6)
+    time.sleep(10)
+
+    coin7a.addspread(7, 1, 7, 2, 7, 3, 7, 4, 7, 5, 7, 6)
+    time.sleep(10)
+
+    coin8a.addspread(8, 1, 8, 2, 8, 3, 8, 4, 8, 5, 8, 6)
+    time.sleep(10)
+
+    coin9a.addspread(9, 1, 9, 2, 9, 3, 9, 4, 9, 5, 9, 6)
+    time.sleep(10)
+
+    coin10a.addspread(10, 1, 10, 2, 10, 3, 10, 4, 10, 5, 10, 6)
+    time.sleep(10)
+
+    coin11a.addspread(11, 1, 11, 2, 11, 3, 11, 4, 11, 5, 11, 6)
+    time.sleep(10)
+
+    coin12a.addspread(12, 1, 12, 2, 12, 3, 12, 4, 12, 5, 12, 6)
+    time.sleep(10)
+    coin13a.addspread(13, 1, 13, 2, 13, 3, 13, 4, 13, 5, 13, 6)
+    time.sleep(10)
+    coin14a.addspread(14, 1, 14, 2, 14, 3, 14, 4, 14, 5, 14, 6)
+    time.sleep(10)
+    coin15a.addspread(15, 1, 15, 2, 15, 3, 15, 4, 15, 5, 15, 6)
+    time.sleep(10)
+    coin16a.addspread(16, 1, 16, 2, 16, 3, 16, 4, 16, 5, 16, 6)
+    time.sleep(10)
+    coin17a.addspread(17, 1, 17, 2, 17, 3, 17, 4, 17, 5, 17, 6)
+    time.sleep(10)
+    coin18a.addspread(18, 1, 18, 2, 18, 3, 18, 4, 18, 5, 18, 6)
+    time.sleep(10)
+    coin19a.addspread(19, 1, 19, 2, 19, 3, 19, 4, 19, 5, 19, 6)
+    time.sleep(10)
+    """
     time.sleep(10)
     coin2b.dfall('ETHUSDT', "4h")
     time.sleep(10)
@@ -388,11 +437,11 @@ while True:
     coin19b.dfall('ALGOUSDT', "4h")
     time.sleep(10)
     coin20b.dfall('ZECUSDT', "4h")
+"""
 
 
 
-
-    time.sleep(25)
+    time.sleep(600)
 
 
 
