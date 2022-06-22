@@ -12,8 +12,10 @@ import ta
 import numpy as np
 import gspread
 
-kesisimmacdsayac = 0
-kesisimmovaverage = 0
+sellsignal = 0
+buysignal = 0
+selltotalsignal = 0
+buytotalsignal = 0
 longgiris = 0
 shortgiris = 0
 sayici_giris_control = 0
@@ -34,7 +36,10 @@ class rsi_atr_ema():
         self.quantity = quantity
         self.buyvalue = buyvalue
         self.sellvalue = sellvalue
-        self.kesisimmacdsayac = kesisimmacdsayac
+        self.sellsignal = sellsignal
+        self.buysignal = buysignal
+        self.selltotalsignal = selltotalsignal
+        self.buytotalsignal = buytotalsignal
 
 
 
@@ -65,75 +70,60 @@ class rsi_atr_ema():
 
             else:
                 bars = exchange.fetch_ohlcv(symbol, timeframe=timeframe, since=None,
-                                            limit=200)  # son 40 price cek pd yap
+                                            limit=100)  # son 40 price cek pd yap
+
+
                 df = pd.DataFrame(bars, columns=["timestamp", "open", "high", "low", "close", "volume"])
+
 
                 df['stochrsi_k'] =ta.momentum.stochrsi_k(df.close)
                 df['stochrsi_d'] = ta.momentum.stochrsi_d(df.close)
 
-                for i in (8,14,50):
+
+                for i in (8,26,50):
                     df['EMA_'+str(i)] = ta.trend.ema_indicator(df.close, window=i)
                 df['atr'] = ta.volatility.average_true_range(df.high,df.low,df.close)
                 macd = MACD(df["close"])
                 df["macd"] = macd.macd_signal()
 
                 df.dropna(inplace=True)
-                def checkcross(df):
-                    series =df['stochrsi_k'] > df['stochrsi_d']
-                    return series.diff()
-                df['cross'] =checkcross(df)
-                df['TP'] = df.close + (df.atr)
+                def checkcrosssell(df):
+                    seriessell =df['stochrsi_k'] < df['stochrsi_d']
+                    return seriessell.diff()
+                df['crosssell'] =checkcrosssell(df)
+                #pd.options.display.max_columns = None
+                #pd.options.display.max_rows = None
 
-
-                df['Buysignal'] = np.where((df.macd>0) & (df.cross) & (df.close > df.EMA_8) & (df.EMA_14 < df.EMA_8) & (df.EMA_50 < df.EMA_14),1,0)
-                x= df.loc[df['Buysignal'] == 1]
-                print (x)
-
-
-
-
-
-
-
-                macddf = df.ta.macd(close='close', fast=12, slow=26, signal=9, append=True)
-                print (macddf)
-                x = (macddf.iloc[:, 1])  # pd 1. colonu al
-                self.macdlast = (x.iloc[-1])  # pd 1. kolon son item
-
-
-
-                y = macddf.iloc[:, 0]
-                self.fastmacd = (y.iloc[-1])
-
-                z = macddf.iloc[:, 2]
-                self.slowmacd = (z.iloc[-1])
-
-
-
-                macd = MACD(df["close"])
-
-                df["macd"] = macd.macd_signal()
-                df["slow macd"] = macddf.iloc[:, 0]
+                def checkcrossbuy(df):
+                    seriesbuy =df['stochrsi_k'] > df['stochrsi_d']
+                    return seriesbuy.diff()
+                df['crossbuy'] =checkcrossbuy(df)
 
 
 
 
+                df['sellsignal'] = np.where((df.crosssell) & (df.close < df.EMA_8)  ,1,0)
+                df['buysignal'] = np.where((df.crossbuy) & (df.close > df.EMA_8) , 1, 0)
 
+                x = (df.iloc[:, 15])  # pd 1. colonu al
+                self.sellsignal = (x.iloc[-1])  # pd 16. kolon son item
 
-                if self.shortgiris != 1 and self.longgiris != 1:
-                    if self.kesisimmacdsayac == 0:
-                        if (df["macd"][len(df.index) - 2] < df["slow macd"][len(df.index) - 2] and df["macd"][
-                            len(df.index) - 1] > df["slow macd"][len(df.index) - 1]) or (
-                                df["macd"][len(df.index) - 2] > df["slow macd"][len(df.index) - 2] and df["macd"][
-                            len(df.index) - 1] < df["slow macd"][len(df.index) - 1]):
-                            self.kesisimmacdsayac += 1
-                            macdkesisim = "macdkesisim"" " + self.symbol + " " + self.timeframe
-                            tele.telegram_bot(macdkesisim)
-                            print(df["macd"])
-                            print(df["slow macd"])
-                            print(symbol, "macdkesisim", self.kesisimmacdsayac)
+                y = (df.iloc[:, 16])  # pd 1. colonu al
+                self.buysignal = (y.iloc[-1])  # pd 17. kolon son item
 
-                    try:
+                w = (df.iloc[:, 7])  # pd 1. colonu al
+                self.lastkvalue = (w.iloc[-1])  # pd 16. kolon son item
+
+                if   self.sellsignal == 1  and self.lastkvalue > 0.6:
+                      self.selltotalsignal =1
+                elif self.buysignal == 1  and self.lastkvalue < 0.4:
+                      self.buytotalsignal = 1
+                #print ( self.lastkvalue)
+                #print(df)
+
+                if self.shortgiris != 1 and self.longgiris != 1 and self.buytotalsignal == 1 or self.selltotalsignal == 1:
+
+                     try:
                         client = Client(api_key=key.Pkey, api_secret=key.Skey)
                         price = client.futures_symbol_ticker(symbol=self.symbol, recvWindow=45000)
                         tp_price = func.price_sell_buy(price, self.buyvalue, self.sellvalue)
@@ -144,57 +134,155 @@ class rsi_atr_ema():
                         order_approve = func.open_order_number(self.symbol)
                         print("order approve", order_approve)
                         print("quantity", self.quantity)
-                        if  self.kesisimmacdsayac == 1:
-                            if order_approve == 1:
 
-                                result = client.futures_account_balance(asset='USDT',
-                                                                        recvWindow=49000)  # bir listeden asset cektik
-                                balance = float(result[6]['withdrawAvailable'])  # with drawal codu ile aldık
-                                if balance > 200:
-                                    try:
-                                        if  self.macdlast > 0:
-                                            print('long gir')
-                                            tele.telegram_bot('long gir-macd2h_strategy')
-                                            tele.telegram_bot(symbol)
+                        if order_approve == 1 and self.buytotalsignal == 1 or self.selltotalsignal == 1 :
 
-                                            self.kesisimmacdsayac = 0
-                                            self.longgiris += 1
-                                            func.long_position(self.symbol, self.quantity,
-                                                               price_sell_new)  # alıs olusturma fonk
+                            result = client.futures_account_balance(asset='USDT',
+                                                                    recvWindow=49000)  # bir listeden asset cektik
+                            balance = float(result[6]['withdrawAvailable'])  # with drawal codu ile aldık
+                            if balance > 200:
+                                try:
+                                    if self.buytotalsignal == 1:
+                                        print('long gir')
+                                        buysignaltele = "buysignalstoch" + " " + self.symbol + " " + self.timeframe
+                                        tele.telegram_bot(buysignaltele)
 
-                                            time.sleep(10)
-                                        else:
-                                            print("short_gir")
+                                        self.buytotalsignal =0
+                                        self.longgiris += 1
+                                        func.long_position(self.symbol, self.quantity,
+                                                           price_sell_new)  # alıs olusturma fonk
 
-                                            tele.telegram_bot("'long gir-macd2h_strategy'")
-                                            tele.telegram_bot(symbol)
+                                        time.sleep(10)
+                                    elif self.selltotalsignal == 1:
+                                         print("short_gir")
 
-                                            self.kesisimmacdsayac = 0
-                                            self.shortgiris += 1
-                                            func.short_position(self.symbol, self.quantity,
-                                                                price_buy_new)  # satıs olusturma fonk
-                                    except:
-                                        tele.telegram_bot('fiyat alamadı1')
+                                         sellsignaltele = "sellsignalstoch" + " " + self.symbol + " " + self.timeframe
+                                         tele.telegram_bot(sellsignaltele)
+                                         self.selftotalsignal = 0
 
 
 
-                                else:
-                                    islemfazla = "islem sayisi 5 den fazlastrtegy2" + " " + self.symbol + " " + self.timeframe
-                                    tele.telegram_bot(islemfazla)
+                                         self.shortgiris += 1
+                                         func.short_position(self.symbol, self.quantity,
+                                                            price_buy_new)  # satıs olusturma fonk
+                                except:
+                                    tele.telegram_bot('fiyat alamadı1')
+
+
+
+                            else:
+                                islemfazla = "islem sayisi 5 den fazlastrtegy2" + " " + self.symbol + " " + self.timeframe
+                                tele.telegram_bot(islemfazla)
                         else:
                             print("setup olusmadı")
 
-                    except:
+                     except:
                         tele.telegram_bot('fiyat alamadı2')
         except ccxt.BaseError as Error:
             print("[ERROR] ", Error)
 
 
-coin2 = rsi_atr_ema('TRXUSDT', "4h", 0.015, 1.02, 0.98)
+coin2 = rsi_atr_ema('ETHUSDT', "2h", 0.015, 1.02, 0.98)
+coin1 = rsi_atr_ema('BTCUSDT', "2h", 0.001, 1.02, 0.98)
+coin3 = rsi_atr_ema('ATOMUSDT', "2h", 2, 1.02, 0.98)
+coin4 = rsi_atr_ema('EOSUSDT', "2h", 20, 1.02, 0.98)
+coin5 = rsi_atr_ema('LITUSDT', "2h", 40, 1.02, 0.98)
+coin6 = rsi_atr_ema('BNBUSDT', "2h", 0.1, 1.02, 0.98)
+
+coin7 = rsi_atr_ema('CRVUSDT', "2h", 22, 1.02, 0.98)
+coin8 = rsi_atr_ema('THETAUSDT', "2h", 20, 1.02, 0.98)
+coin9 = rsi_atr_ema('XRPUSDT', "2h", 10, 1.02, 0.98)
+coin10 = rsi_atr_ema('RUNEUSDT', "2h", 10, 1.02, 0.98)
+coin11 = rsi_atr_ema('ARUSDT', "2h", 2, 1.02, 0.98)
+coin12 = rsi_atr_ema('DOTUSDT', "2h", 3, 1.02, 0.98)
+coin13 = rsi_atr_ema('ETCUSDT', "2h", 1.5, 1.02, 0.98)
+coin14 = rsi_atr_ema('ALGOUSDT', "2h", 80, 1.02, 0.98)
+coin15 = rsi_atr_ema('TRXUSDT', "2h", 200, 1.02, 0.98)
+coin16 = rsi_atr_ema('LRCUSDT', "2h", 50, 1.02, 0.98)
+coin17 = rsi_atr_ema('SANDUSDT', "2h", 25, 1.02, 0.98)
+coin18 = rsi_atr_ema('AVAXUSDT', "2h", 1, 1.02, 0.98)
+coin19 = rsi_atr_ema('COTIUSDT', "2h", 220, 1.02, 0.98)
+coin20 = rsi_atr_ema('LINKUSDT', "2h", 4, 1.02, 0.98)
+coin21 = rsi_atr_ema('NEARUSDT', "2h", 9, 1.02, 0.98)
+
+coin24 = rsi_atr_ema('MATICUSDT', "2h", 40, 1.02, 0.98)
+coin25 = rsi_atr_ema('BELUSDT', "2h", 30, 1.02, 0.98)
+coin26 = rsi_atr_ema('KNCUSDT', "2h", 20, 1.02, 0.98)
+coin27 = rsi_atr_ema('BLZUSDT', "2h", 200, 1.02, 0.98)
+coin28 = rsi_atr_ema('KAVAUSDT', "2h", 15, 1.02, 0.98)
+coin29 = rsi_atr_ema('CHZUSDT', "2h", 250, 1.02, 0.98)
+
+coin31 = rsi_atr_ema('QTUMUSDT', "2h", 8, 1.02, 0.98)
+coin32 = rsi_atr_ema('CHRUSDT', "2h", 150, 1.02, 0.98)
+coin33 = rsi_atr_ema('OCEANUSDT', "2h", 100, 1.02, 0.98)
+coin34 = rsi_atr_ema('ALPHAUSDT', "2h", 150,1.02, 0.98)
 
 
 while True:
-    coin2.dfall('TRXUSDT', "4h")
+    coin2.dfall('ETHUSDT', "2h")
+    time.sleep(10)
+    coin1.dfall('BTCUSDT', "2h")
+    time.sleep(10)
+    coin3.dfall('ATOMUSDT', "2h")
+    time.sleep(10)
+    coin4.dfall('EOSUSDT', "2h")
+    time.sleep(10)
+    coin5.dfall('LITUSDT', "2h")
+    time.sleep(10)
+    coin6.dfall('BNBUSDT', "2h")
+    time.sleep(10)
+    coin7.dfall('CRVUSDT', "2h")
+    time.sleep(10)
+    coin8.dfall('THETAUSDT', "2h")
+    time.sleep(10)
+    coin9.dfall('XRPUSDT', "2h")
+    time.sleep(10)
+    coin10.dfall('RUNEUSDT', "2h")
+    time.sleep(10)
+    coin11.dfall('ARUSDT', "2h")
+    time.sleep(10)
+    coin12.dfall('DOTUSDT', "2h")
+    time.sleep(10)
+    coin13.dfall('ETCUSDT', "2h")
+    time.sleep(10)
+    coin14.dfall('ALGOUSDT', "2h")
+    time.sleep(10)
+    coin15.dfall('TRXUSDT', "2h")
+    time.sleep(10)
+    coin16.dfall('LRCUSDT', "2h")
+    time.sleep(10)
+    coin17.dfall('SANDUSDT', "2h")
+    time.sleep(10)
+    coin18.dfall('AVAXUSDT', "2h")
+    time.sleep(10)
+    coin19.dfall('COTIUSDT', "2h")
+    time.sleep(10)
+    coin20.dfall('LINKUSDT', "2h")
+    time.sleep(10)
+    coin21.dfall('NEARUSDT', "2h")
+    time.sleep(10)
+
+    coin24.dfall('MATICUSDT', "2h")
+    time.sleep(10)
+    coin25.dfall('BELUSDT', "2h")
+    time.sleep(10)
+    coin26.dfall('KNCUSDT', "2h")
+    time.sleep(10)
+    coin27.dfall('BLZUSDT', "2h")
+    time.sleep(10)
+    coin28.dfall('KAVAUSDT', "2h")
+    time.sleep(10)
+    coin29.dfall('CHZUSDT', "2h")
+    time.sleep(10)
+
+    coin31.dfall('QTUMUSDT', "2h")
+    time.sleep(10)
+    coin32.dfall('CHRUSDT', "2h")
+    time.sleep(10)
+    coin33.dfall('OCEANUSDT', "2h")
+    time.sleep(10)
+    coin34.dfall('ALPHAUSDT', "2h")
+    time.sleep(10)
 
     tele.telegram_bot('server online4')
     time.sleep(4800)
