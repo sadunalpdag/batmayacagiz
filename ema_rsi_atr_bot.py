@@ -114,9 +114,9 @@ class rsi_atr_ema():
                 w = (df.iloc[:, 7])  # pd 1. colonu al
                 self.lastkvalue = (w.iloc[-1])  # pd 16. kolon son item
 
-                if   self.sellsignal == 1  and self.lastkvalue > 0.6:
+                if   self.sellsignal == 1  and self.lastkvalue > 0.7:
                       self.selltotalsignal =1
-                elif self.buysignal == 1  and self.lastkvalue < 0.4:
+                elif self.buysignal == 1  and self.lastkvalue < 0.3:
                       self.buytotalsignal = 1
                 #print ( self.lastkvalue)
                 #print(df)
