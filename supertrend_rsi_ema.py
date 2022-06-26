@@ -89,8 +89,8 @@ class Macdema():
                 df['rsi'] = ta.rsi(df['close'], length=14)
 
                 pd.set_option('display.max_column', None)
-                df['sellsignal'] = np.where((df.close < df.FastEma) & (df.close < df.stlast) & (df.rsi > 50), 1, 0)
-                df['buysignal'] = np.where((df.close > df.FastEma) & (df.close > df.stlast) & (df.rsi < 50), 1, 0)
+                df['sellsignal'] = np.where((df.close < df.FastEma) & (df.close < df.stlast) & (df.rsi > 40), 1, 0)
+                df['buysignal'] = np.where((df.close > df.FastEma) & (df.close > df.stlast) & (df.rsi < 60), 1, 0)
 
                 sellsignal = df.iloc[:, 10]  # bununla data set içindeki 1. kolonu cekiyorum
                 sellsignallast = (sellsignal.iloc[-1])
