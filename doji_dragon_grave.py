@@ -21,6 +21,8 @@ macdlast = 0
 engulfing = 0
 last_elementbullish = False
 last_elementbearish = False
+last_elementbearish_fire=""
+last_elementbullish_fire=""
 kimlik = credentials.Certificate("firebase/emaclass-firebase-adminsdk-zivwq-88b53bed66.json")
 
 app = firebase_admin.initialize_app(kimlik)
@@ -57,7 +59,7 @@ class Macdema():
         try:
             if self.shortgiris == 1 or self.longgiris == 1 or order_approve == 0:  # alıs satıstan sonra 100 cycledan sonra tekrar işleme açma
                 self.sayici_giris_control += 1
-                if self.sayici_giris_control == 3:
+                if self.sayici_giris_control == 10:
                     print(symbol, timeframe, self.sayici_giris_control)
                     self.longgiris = 0
                     self.shortgiris = 0
@@ -92,8 +94,8 @@ class Macdema():
                 else:
                     last_elementbearish_fire = "nothing"
 
-                print(self.last_elementbearish)
-                print(self.last_elementbullish)
+                print(last_elementbearish_fire)
+                print(last_elementbullish_fire)
 
                 if self.shortgiris != 1 and self.longgiris != 1:
 
@@ -381,7 +383,7 @@ while True:
     coin34a.dfall('ALPHAUSDT', "4h")
     time.sleep(30)
 
-    tele.telegram_bot('server online5')
+    tele.telegram_bot('server online6')
     time.sleep(4800)
 
 
