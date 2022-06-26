@@ -60,7 +60,7 @@ class Macdema():
         try:
             if self.shortgiris == 1 or self.longgiris == 1 or order_approve == 0:  # alıs satıstan sonra 100 cycledan sonra tekrar işleme açma
                 self.sayici_giris_control += 1
-                if self.sayici_giris_control == 3:
+                if self.sayici_giris_control == 10:
                     print(symbol, timeframe, self.sayici_giris_control)
                     self.longgiris = 0
                     self.shortgiris = 0
@@ -88,13 +88,13 @@ class Macdema():
 
 
                 if self.last_elementbullish == True:
-                    last_elementbearish_fire="Bullish"
-                else:
-                    last_elementbearish_fire="nothing"
-                if self.last_elementbearish == True:
-                    last_elementbullish_fire="Bearish"
+                    last_elementbullish_fire="Bullish"
                 else:
                     last_elementbullish_fire="nothing"
+                if self.last_elementbearish == True:
+                    last_elementbearish_fire="Bearish"
+                else:
+                    last_elementbearish_fire="nothing"
 
 
                 print (self.last_elementbearish)
@@ -105,7 +105,7 @@ class Macdema():
 
                     db = firestore.client()  # db e baglantı
 
-                    document = db.collection("engulfing").document(self.symbol)
+                    document = db.collection("engulfing"+timeframe).document(self.symbol)
                     
 
                     document2 = db.collection("data2").document("balance")
@@ -113,6 +113,14 @@ class Macdema():
                     engulfing = document.get().to_dict()
 
                     data2 = document2.get().to_dict()
+                    """
+                    doc_ref = db.collection(u"engulfing").document(self.symbol)
+
+                    doc = doc_ref.get()
+                    print(doc.to_dict())
+                    print(doc.get('engulfing_bullish'))
+                    """
+
 
                     document.set({
                         "symbol": self.symbol,
@@ -140,12 +148,12 @@ class Macdema():
                         order_approve = func.open_order_number(self.symbol)
                         print("order approve", order_approve)
                         print("quantity", self.quantity)
-                        if self.last_elementbullish =="Bullish" or self.last_elementbearish=="Bearish" :
+                        if self.last_elementbullish == True or self.last_elementbearish==True :
                             if order_approve == 1:
     
                                 if balance > 200:
                                     try:
-                                        if self.last_elementbullish =="Bullish":
+                                        if self.last_elementbullish ==True:
                                             print('long gir')
                                             tele.telegram_bot('long gir-enfulging_strategy')
                                             tele.telegram_bot(symbol)
@@ -154,7 +162,7 @@ class Macdema():
                                                                price_sell_new)  # alıs olusturma fonk
 
                                             time.sleep(30)
-                                        elif self.last_elementbearish=="Bearish":
+                                        elif self.last_elementbearish==True:
                                             print("short_gir")
 
                                             tele.telegram_bot("short_gir-enfulging_strategy")
