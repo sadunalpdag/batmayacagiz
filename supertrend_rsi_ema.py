@@ -22,6 +22,13 @@ macdlast = 0
 engulfing = 0
 buysignallast=0
 sellsignallast=0
+rsisit = 0
+emasit = 0
+stsit = 0
+rsilast = 0
+emalast = 0
+stlast1 = 0
+coipricefloat = 0
 kimlik = credentials.Certificate("firebase/emaclass-firebase-adminsdk-zivwq-88b53bed66.json")
 
 app = firebase_admin.initialize_app(kimlik)
@@ -40,6 +47,13 @@ class Macdema():
         self.sellvalue = sellvalue
         self.buysignallast = buysignallast
         self.sellsignallast = sellsignallast
+        self.rsisit=rsisit
+        self.emasit=emasit
+        self.stsit =stsit
+        self.rsilast =rsilast
+        self.emalast =emalast
+        self.stlast1 =stlast1
+        self.coipricefloat =coipricefloat
 
     def dfall(self, symbol, timeframe):
 
@@ -85,20 +99,72 @@ class Macdema():
 
                 FastEma = EMAIndicator(df["close"], float(150))
                 df["FastEma"] = FastEma.ema_indicator()
-                ema_last = df["FastEma"][len(df.index) - 1]
+
                 df['rsi'] = ta.rsi(df['close'], length=14)
+                client = Client(api_key=key.Pkey, api_secret=key.Skey)
+                price = client.get_ticker(symbol=symbol)
+
+                coiprice = price['askPrice']
+                self.coipricefloat= float(coiprice)
+                round(self.coipricefloat, 2)
+
+
+
+
+
 
                 pd.set_option('display.max_column', None)
-                df['sellsignal'] = np.where((df.close < df.FastEma) & (df.close < df.stlast) & (df.rsi > 40), 1, 0)
-                df['buysignal'] = np.where((df.close > df.FastEma) & (df.close > df.stlast) & (df.rsi < 60), 1, 0)
+                df['sellsignal'] = np.where((self.coipricefloat < df.FastEma) & (self.coipricefloat< df.stlast) & (df.rsi > 50), 1, 0)
+                df['buysignal'] = np.where((self.coipricefloat> df.FastEma) & (self.coipricefloat > df.stlast) & (df.rsi < 50), 1, 0)
 
+                pd.set_option('display.max_columns', None)
+                print (df)
                 sellsignal = df.iloc[:, 10]  # bununla data set içindeki 1. kolonu cekiyorum
-                sellsignallast = (sellsignal.iloc[-1])
+                self.sellsignallast = (sellsignal.iloc[-1])
 
                 buysignal = df.iloc[:, 11]  # bununla data set içindeki 1. kolonu cekiyorum
-                buysignallast = (buysignal.iloc[-1])
+                self.buysignallast = (buysignal.iloc[-1])
+
+                bullish =  self.buysignallast.item() # numpy formattan native formata cevirme
+                bearish = self.sellsignallast.item()
+
+
+                rsi = df.iloc[:, 9]  # bununla data set içindeki 1. kolonu cekiyorum
+                self.rsilast = (rsi.iloc[-1])
+                round(self.rsilast,2)
+
+                ema = df.iloc[:, 8]  # bununla data set içindeki 1. kolonu cekiyorum
+                self.emalast = (ema.iloc[-1])
+                round(self.emalast, 2)
+
+                stdiv = df.iloc[:, 6]  # bununla data set içindeki 1. kolonu cekiyorum
+                self.stlast1 = (stdiv.iloc[-1])
+                round(self.stlast1, 2)
+
+
+
+
+                if self.rsilast < 50:
+                    self.rsisit = 1
+                elif self.rsilast > 50:
+                    self.rsisit = 2
+
+                if self.emalast < self.coipricefloat:
+                    self.emasit = 1
+                else:
+                    self.emasit = 2
+
+                if self.stlast1 < self.coipricefloat:
+                    self.stsit = 1
+                else:
+                    self.stsit = 2
 
                 print(df)
+
+
+                print (self.sellsignallast)
+                print (self.buysignallast)
+                print (symbol)
 
 
 
@@ -111,14 +177,25 @@ class Macdema():
 
                     document.set({
                         "symbol": self.symbol,
-                        "bullish": self.buysignallast,
-                        "bearish": self.sellsignallast,
-                        "timeframe": self.timeframe
+
+                        "timeframe": self.timeframe,
+                        "bullish": bullish ,
+                        "bearish": bearish,
+
+                        "rsi": round(self.rsilast,2),
+                        "ema": round(self.emalast,2),
+                        "supertrend": round(self.stlast1,2),
+                        "price": round(self.coipricefloat,2),
+                        "emasit": self.emasit,
+                        "rsisit": self.rsisit,
+                        "stsit": self.stsit
+
+
 
                     })
 
                     try:
-                        client = Client(api_key=key.Pkey, api_secret=key.Skey)
+
                         result = client.futures_account_balance(asset='USDT',
                                                                 recvWindow=49000)  # bir listeden asset cektik
                         balance = float(result[6]['withdrawAvailable'])
@@ -375,7 +452,7 @@ while True:
     time.sleep(30)
 
     tele.telegram_bot('server online7')
-    time.sleep(4800)
+    time.sleep(480)
 
 
 
