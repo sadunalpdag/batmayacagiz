@@ -85,6 +85,8 @@ class Macdema():
                                             limit=200)  # son 40 price cek pd yap
                 df = pd.DataFrame(bars, columns=["timestamp", "open", "high", "low", "close", "volume"])
 
+
+
                 st = ta.supertrend(high=df['high'], low=df['low'], close=df['close'], length=10, multiplier=4.0,
                                    append=True)
 
@@ -114,8 +116,8 @@ class Macdema():
 
 
                 pd.set_option('display.max_column', None)
-                df['sellsignal'] = np.where((self.coipricefloat < df.FastEma) & (self.coipricefloat< df.stlast) & (df.rsi > 50), 1, 0)
-                df['buysignal'] = np.where((self.coipricefloat> df.FastEma) & (self.coipricefloat > df.stlast) & (df.rsi < 50), 1, 0)
+                df['sellsignal'] = np.where((self.coipricefloat < df.FastEma) & (self.coipricefloat< df.stlast) & (df.rsi > 55), 1, 0)
+                df['buysignal'] = np.where((self.coipricefloat> df.FastEma) & (self.coipricefloat > df.stlast) & (df.rsi < 45), 1, 0)
 
                 pd.set_option('display.max_columns', None)
                 print (df)
