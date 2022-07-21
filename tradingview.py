@@ -1,17 +1,18 @@
 
 import pandas as pd
-
+import ccxt, config
 
 import time
 import send_msg as tele
-import pandas_ta as ta
+
 import functions as func
-import key
+
 from binance.client import Client
 import firebase_admin
 from firebase_admin import credentials, firestore
 from tradingview_ta import TA_Handler, Interval, Exchange
 import calendar
+import key
 from datetime import datetime
 
 longgiris = 0
@@ -42,16 +43,28 @@ class Macdema():
         self.sellvalue = sellvalue
         self.buysignallast = buysignallast
         self.sellsignallast = sellsignallast
+
+
         self.coipricefloat =coipricefloat
 
     def dfall(self, symbol, timeframe):
 
+        exchange = ccxt.binance({
+            "apiKey": config.apiKey,
+            "secret": config.secretKey,
+
+            'options': {
+                'defaultType': 'future'
+            },
+            'enableRateLimit': True,
+            'adjustForTimeDifference': True
+        })
         order_approve = func.open_order_number(self.symbol)
 
         try:
             if self.shortgiris == 1 or self.longgiris == 1 or order_approve == 0:  # alıs satıstan sonra 100 cycledan sonra tekrar işleme açma
                 self.sayici_giris_control += 1
-                if self.sayici_giris_control == 5:
+                if self.sayici_giris_control == 10:
                     print(symbol, timeframe, self.sayici_giris_control)
                     self.longgiris = 0
                     self.shortgiris = 0
@@ -83,7 +96,7 @@ class Macdema():
 
                 db = firestore.client()  # db e baglantı
 
-                document = db.collection(self.symbol+self.timeframe).document(x)
+                document = db.collection(self.symbol + self.timeframe).document(x)
                 docId = document.id
                 document.set({
                     "id": ts_str,
@@ -95,7 +108,7 @@ class Macdema():
                 list1 = []
                 list2 = []
 
-                snapshots = list(db.collection(self.symbol+self.timeframe).get())
+                snapshots = list(db.collection(self.symbol + self.timeframe).get())
                 df = pd.DataFrame()
                 for snap in snapshots:
                     X = snap.to_dict()
@@ -121,79 +134,80 @@ class Macdema():
 
                 if sellsignallast2 != sellsignallast1:
                     print("esit_degil")
-                    if sellsignallast1=="BUY" or "STRONG_BUY":
-                        self.buysignallast=1
-
-                    elif sellsignallast1=="SELL" or "STRONG_SELL":
-                        self.sellsignallast=1
-
-
-                    elif sellsignallast1 == "NEUTRAL" and sellsignallast2 == "SELL" or "STRONG_SELL":
+                    if sellsignallast1 == "['BUY']" or "['STRONG_BUY']":
                         self.buysignallast = 1
 
-                    elif sellsignallast1 == "NEUTRAL" and sellsignallast2 == "BUY" or "STRONG_BUY":
+                    elif sellsignallast1 == "['SELL']" or "['STRONG_SELL']":
                         self.sellsignallast = 1
 
 
+                    elif sellsignallast1 == "['NEUTRAL']" and sellsignallast2 == "['SELL']" or "['STRONG_SELL']":
+                        self.buysignallast = 1
+
+                    elif sellsignallast1 == "['NEUTRAL']" and sellsignallast2 == "['BUY']" or "['STRONG_BUY']":
+                        self.sellsignallast = 1
+                print (self.sellsignallast)
+                print (self.buysignallast)
 
 
 
-                        try:
-                            client = Client(api_key=key.Pkey, api_secret=key.Skey)
-                            price = client.get_ticker(symbol=symbol)
 
-                            result = client.futures_account_balance(asset='USDT',
-                                                                    recvWindow=49000)  # bir listeden asset cektik
-                            balance = float(result[6]['withdrawAvailable'])
+                try:
 
-                            price = client.futures_symbol_ticker(symbol=self.symbol, recvWindow=45000)
+                    client = Client(api_key=,
+                                    api_secret=)
+                    result = client.futures_account_balance(asset='USDT',
+                                                            recvWindow=49000)  # bir listeden asset cektik
+                    balance = float(result[6]['withdrawAvailable'])
 
-                            tp_price = func.price_sell_buy(price, self.buyvalue, self.sellvalue)
-                            price_sell_new = tp_price[0]
-                            price_buy_new = tp_price[1]
-                            print(price_buy_new)
-                            print(price_sell_new)
-                            order_approve = func.open_order_number(self.symbol)
-                            print("order approve", order_approve)
-                            print("quantity", self.quantity)
-                            if self.buysignallast == 1 or self.sellsignallast == 1:
-                                if order_approve == 1:
+                    price = client.futures_symbol_ticker(symbol=self.symbol, recvWindow=45000)
 
-                                    if balance > 200:
-                                        try:
-                                            if self.buysignallast == 1:
-                                                print('long gir')
-                                                tele.telegram_bot('long gir-tRADİNGVİEW')
-                                                tele.telegram_bot(symbol)
-                                                self.longgiris += 1
-                                                func.long_position(self.symbol, self.quantity,
-                                                                   price_sell_new)  # alıs olusturma fonk
+                    tp_price = func.price_sell_buy(price, self.buyvalue, self.sellvalue)
+                    price_sell_new = tp_price[0]
+                    price_buy_new = tp_price[1]
+                    print(price_buy_new)
+                    print(price_sell_new)
+                    order_approve = func.open_order_number(self.symbol)
+                    print("order approve", order_approve)
+                    print("quantity", self.quantity)
 
-                                                time.sleep(30)
-                                            elif self.sellsignallast == 1:
-                                                print("short_gir")
+                    if self.buysignallast == 1 or self.sellsignallast == 1:
+                        if order_approve == 1:
 
-                                                tele.telegram_bot("short_gir-tRADİNGVİEW")
-                                                tele.telegram_bot(symbol)
-                                                self.shortgiris += 1
-                                                func.short_position(self.symbol, self.quantity,
-                                                                    price_buy_new)  # satıs olusturma fonk
-                                        except:
-                                            tele.telegram_bot('fiyat alamadı1')
+                            if balance > 200:
+                                try:
+                                    if self.buysignallast == 1:
+                                        print('long gir')
+                                        tele.telegram_bot('long gir-tradingview')
+                                        tele.telegram_bot(symbol)
+                                        self.longgiris += 1
+                                        func.long_position(self.symbol, self.quantity,
+                                                           price_sell_new)  # alıs olusturma fonk
+
+                                        time.sleep(30)
+                                    elif self.sellsignallast == 1:
+                                        print("short_gir")
+
+                                        tele.telegram_bot("short_gir-tradingview")
+                                        tele.telegram_bot(symbol)
+                                        self.shortgiris += 1
+                                        func.short_position(self.symbol, self.quantity,
+                                                            price_buy_new)  # satıs olusturma fonk
+                                except:
+                                    tele.telegram_bot('fiyat alamadı1')
 
 
 
-                                else:
-                                    islemfazla = "islem sayisi 5 den fazlastrtegy2" + " " + self.symbol + " " + self.timeframe
-                                    tele.telegram_bot(islemfazla)
-                            else:
-                                print("setup olusmadı")
+                        else:
+                            islemfazla = "islem sayisi 5 den fazlastrtegy2" + " " + self.symbol + " " + self.timeframe
+                            tele.telegram_bot(islemfazla)
+                    else:
+                        print("setup olusmadı")
 
-                        except:
-                            tele.telegram_bot('fiyat alamadı2')
-        except :
-               print("HATA")
-
+                except:
+                    tele.telegram_bot('fiyat alamadı2')
+        except ccxt.BaseError as Error:
+            print("[ERROR] ", Error)
 
 coin2 = Macdema('API3USDT', "1h", 15, 1.007, 0.993)
 coin1 = Macdema('WOOUSDT', "1h", 100, 1.007, 0.993)
@@ -234,6 +248,22 @@ while True:
 
     tele.telegram_bot('server online8')
     time.sleep(900)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
