@@ -1,8 +1,6 @@
 
 import pandas as pd
-import numpy as np
 
-from ta.trend import EMAIndicator
 
 import time
 import send_msg as tele
@@ -26,7 +24,7 @@ engulfing = 0
 buysignallast=0
 sellsignallast=0
 coipricefloat = 0
-kimlik = credentials.Certificate("firebase/emaclass-firebase-adminsdk-zivwq-88b53bed66.json")
+kimlik = credentials.Certificate("ema_class.json")
 
 app = firebase_admin.initialize_app(kimlik)
 
@@ -141,6 +139,8 @@ class Macdema():
 
 
                         try:
+                            client = Client(api_key=key.Pkey, api_secret=key.Skey)
+                            price = client.get_ticker(symbol=symbol)
 
                             result = client.futures_account_balance(asset='USDT',
                                                                     recvWindow=49000)  # bir listeden asset cektik
