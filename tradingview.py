@@ -1,4 +1,3 @@
-
 import pandas as pd
 import ccxt, config
 
@@ -22,9 +21,13 @@ sheetsymbolx = 0
 sheetssymboly = 0
 macdlast = 0
 engulfing = 0
-buysignallast=0
-sellsignallast=0
+buysignallast = 0
+sellsignallast = 0
 coipricefloat = 0
+sellsignallast1 = 0
+sellsignallast2 = 0
+str_sellsignallast1 = 0
+str_sellsignallast2 = 0
 kimlik = credentials.Certificate("ema_class.json")
 
 app = firebase_admin.initialize_app(kimlik)
@@ -43,9 +46,12 @@ class Macdema():
         self.sellvalue = sellvalue
         self.buysignallast = buysignallast
         self.sellsignallast = sellsignallast
+        self.sellsignallast1 = sellsignallast1
+        self.sellsignallast2 = sellsignallast2
+        self.str_sellsignallast1 = str_sellsignallast1
+        self.str_sellsignallast2 = str_sellsignallast2
 
-
-        self.coipricefloat =coipricefloat
+        self.coipricefloat = coipricefloat
 
     def dfall(self, symbol, timeframe):
 
@@ -68,6 +74,9 @@ class Macdema():
                     print(symbol, timeframe, self.sayici_giris_control)
                     self.longgiris = 0
                     self.shortgiris = 0
+                    self.sellsignallast = 0
+                    self.buysignallast = 0
+
                     self.sayici_giris_control = 0
 
 
@@ -127,35 +136,38 @@ class Macdema():
                 df = pd.DataFrame(d, columns=['situation', 'time'])
                 print(df)
                 sellsignal = df.iloc[:, 0]  # bununla data set içindeki 1. kolonu cekiyorum
-                sellsignallast1 = (sellsignal.iloc[-1])
-                sellsignallast2 = (sellsignal.iloc[-2])
-                print(sellsignallast2)
-                print(sellsignallast1)
+                self.sellsignallast1 = (sellsignal.iloc[-1])
+                self.sellsignallast2 = (sellsignal.iloc[-2])
+                print(self.sellsignallast2)
+                print(self.sellsignallast1)
+                print(type(sellsignallast1))
+                print(type(sellsignallast2))
+                self.str_sellsignallast1 = str(self.sellsignallast1)
+                self.str_sellsignallast2 = str(self.sellsignallast2)
+                print(type(self.str_sellsignallast1))
+                print(type(self.str_sellsignallast2))
 
-                if sellsignallast2 != sellsignallast1:
+                if self.str_sellsignallast2 != self.str_sellsignallast1:
                     print("esit_degil")
-                    if sellsignallast1 == "['BUY']" or "['STRONG_BUY']":
+                    if self.str_sellsignallast1 == "['BUY']" or self.str_sellsignallast1 == "['STRONG_BUY']":
                         self.buysignallast = 1
 
-                    elif sellsignallast1 == "['SELL']" or "['STRONG_SELL']":
+                    elif self.str_sellsignallast1 == "['SELL']" or self.str_sellsignallast1 == "['STRONG_SELL']":
                         self.sellsignallast = 1
 
 
-                    elif sellsignallast1 == "['NEUTRAL']" and sellsignallast2 == "['SELL']" or "['STRONG_SELL']":
+                    elif self.str_sellsignallast1 == "['NEUTRAL']" and self.str_sellsignallast2 == "['SELL']" or self.str_sellsignallast2 == "['STRONG_SELL']":
                         self.buysignallast = 1
 
-                    elif sellsignallast1 == "['NEUTRAL']" and sellsignallast2 == "['BUY']" or "['STRONG_BUY']":
+                    elif self.str_sellsignallast1 == "['NEUTRAL']" and self.str_sellsignallast2 == "['BUY']" or self.str_sellsignallast2 == "['STRONG_BUY']":
                         self.sellsignallast = 1
-                print (self.sellsignallast)
-                print (self.buysignallast)
-
-
-
+                print(self.sellsignallast)
+                print(self.buysignallast)
 
                 try:
 
-                    client = Client(api_key=,
-                                    api_secret=)
+                    client = Client(api_key="",
+                                    api_secret="")
                     result = client.futures_account_balance(asset='USDT',
                                                             recvWindow=49000)  # bir listeden asset cektik
                     balance = float(result[6]['withdrawAvailable'])
@@ -202,26 +214,37 @@ class Macdema():
                             islemfazla = "islem sayisi 5 den fazlastrtegy2" + " " + self.symbol + " " + self.timeframe
                             tele.telegram_bot(islemfazla)
                     else:
-                        print("setup olusmadı")
+                        print("setup olusmadi")
 
                 except:
                     tele.telegram_bot('fiyat alamadı2')
         except ccxt.BaseError as Error:
             print("[ERROR] ", Error)
 
+
 coin2 = Macdema('API3USDT', "1h", 15, 1.007, 0.993)
 coin1 = Macdema('WOOUSDT', "1h", 100, 1.007, 0.993)
 coin3 = Macdema('CELOUSDT', "1h", 30, 1.007, 0.993)
 coin4 = Macdema('ARPAUSDT', "1h", 600, 1.007, 0.993)
 coin5 = Macdema('LPTUSDT', "1h", 3, 1.007, 0.993)
+coin6 = Macdema('KSMUSDT', "1h", 0.5, 1.007, 0.993)
+coin7 = Macdema('OMGUSDT', "1h", 15, 1.007, 0.993)
+coin8 = Macdema('OPUSDT', "1h", 40, 1.007, 0.993)
+coin9 = Macdema('UNFIUSDT', "1h", 6, 1.007, 0.993)
+coin10 = Macdema('PEOPLEUSDT', "1h", 100, 1.007, 0.993)
+coin11 = Macdema('DASHUSDT', "1h", 1, 1.007, 0.993)
 
-
-coin2a = Macdema('API3USDT', "2h", 15, 1.01, 0.99)
-coin1a = Macdema('WOOUSDT', "2h", 100, 1.01, 0.99)
-coin3a = Macdema('CELOUSDT', "2h", 30, 1.01, 0.99)
-coin4a = Macdema('ARPAUSDT', "2h", 600, 1.01, 0.99)
-coin5a = Macdema('LPTUSDT', "2h", 3, 1.01, 0.99)
-
+coin2a = Macdema('API3USDT', "2h", 15, 1.007, 0.993)
+coin1a = Macdema('WOOUSDT', "2h", 100, 1.007, 0.993)
+coin3a = Macdema('CELOUSDT', "2h", 30, 1.007, 0.993)
+coin4a = Macdema('ARPAUSDT', "2h", 600, 1.007, 0.993)
+coin5a = Macdema('LPTUSDT', "2h", 3, 1.007, 0.993)
+coin6a = Macdema('KSMUSDT', "2h", 0.5, 1.007, 0.993)
+coin7a = Macdema('OMGUSDT', "2h", 15, 1.007, 0.993)
+coin8a = Macdema('OPUSDT', "2h", 40, 1.007, 0.993)
+coin9a = Macdema('UNFIUSDT', "2h", 6, 1.007, 0.993)
+coin10a = Macdema('PEOPLEUSDT', "2h", 100, 1.007, 0.993)
+coin11a = Macdema('DASHUSDT', "1h", 1, 1.007, 0.993)
 
 while True:
     coin2.dfall('API3USDT', "1h")
@@ -233,7 +256,19 @@ while True:
     coin4.dfall('ARPAUSDT', "1h")
     time.sleep(30)
     coin5.dfall('LPTUSDT', "1h")
-
+    time.sleep(30)
+    coin6.dfall('KSMUSDT', "1h")
+    time.sleep(30)
+    coin7.dfall('OMGUSDT', "1h")
+    time.sleep(30)
+    coin8.dfall('OPUSDT', "1h")
+    time.sleep(30)
+    coin9.dfall('UNFIUSDT', "1h")
+    time.sleep(30)
+    coin10.dfall('PEOPLEUSDT', "1h")
+    time.sleep(30)
+    coin11.dfall('DASHUSDT', "1h")
+    time.sleep(30)
 
     coin2a.dfall('API3USDT', "2h")
     time.sleep(30)
@@ -244,44 +279,19 @@ while True:
     coin4a.dfall('ARPAUSDT', "2h")
     time.sleep(30)
     coin5a.dfall('LPTUSDT', "2h")
-
+    time.sleep(30)
+    coin6a.dfall('KSMUSDT', "2h")
+    time.sleep(30)
+    coin7a.dfall('OMGUSDT', "2h")
+    time.sleep(30)
+    coin8a.dfall('OPUSDT', "2h")
+    time.sleep(30)
+    coin9a.dfall('UNFIUSDT', "2h")
+    time.sleep(30)
+    coin10a.dfall('PEOPLEUSDT', "2h")
+    time.sleep(30)
+    coin11a.dfall('DASHUSDT', "2h")
+    time.sleep(30)
 
     tele.telegram_bot('server online8')
     time.sleep(900)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
