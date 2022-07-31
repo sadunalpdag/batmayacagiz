@@ -12,7 +12,6 @@ from binance.client import Client
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-
 longgiris = 0
 shortgiris = 0
 sayici_giris_control = 0
@@ -20,9 +19,9 @@ sheetsymbolx = 0
 sheetssymboly = 0
 macdlast = 0
 engulfing = 0
-last_elementbullish =False
-last_elementbearish =False
-kimlik = credentials.Certificate("firebase/emaclass-firebase-adminsdk-zivwq-88b53bed66.json")
+last_elementbullish = False
+last_elementbearish = False
+kimlik = credentials.Certificate("ema_class.json")
 
 app = firebase_admin.initialize_app(kimlik)
 
@@ -38,10 +37,8 @@ class Macdema():
         self.quantity = quantity
         self.buyvalue = buyvalue
         self.sellvalue = sellvalue
-        self.last_elementbullish=last_elementbullish
-        self.last_elementbearish=last_elementbearish
-
-
+        self.last_elementbullish = last_elementbullish
+        self.last_elementbearish = last_elementbearish
 
     def dfall(self, symbol, timeframe):
 
@@ -64,12 +61,15 @@ class Macdema():
                     print(symbol, timeframe, self.sayici_giris_control)
                     self.longgiris = 0
                     self.shortgiris = 0
+                    self.last_elementbullish = False
+                    self.last_elementbearish = False
                     self.sayici_giris_control = 0
 
 
             else:
 
-                candles = requests.get('https://api.binance.com/api/v1/klines?symbol='+self.symbol+'&interval='+self.timeframe)
+                candles = requests.get(
+                    'https://api.binance.com/api/v1/klines?symbol=' + self.symbol + '&interval=' + self.timeframe)
                 candles_dict = candles.json()
 
                 candles_df = pd.DataFrame(candles_dict,
@@ -85,28 +85,23 @@ class Macdema():
                 self.last_elementbullish = candles_df["bullish_engulfing"].iloc[-1]
                 self.last_elementbearish = candles_df["bearish_engulfing"].iloc[-1]
 
-
-
                 if self.last_elementbullish == True:
-                    last_elementbullish_fire="Bullish"
+                    last_elementbullish_fire = "Bullish"
                 else:
-                    last_elementbullish_fire="nothing"
+                    last_elementbullish_fire = "nothing"
                 if self.last_elementbearish == True:
-                    last_elementbearish_fire="Bearish"
+                    last_elementbearish_fire = "Bearish"
                 else:
-                    last_elementbearish_fire="nothing"
+                    last_elementbearish_fire = "nothing"
 
-
-                print (self.last_elementbearish)
-                print (self.last_elementbullish)
-
+                print(self.last_elementbearish)
+                print(self.last_elementbullish)
 
                 if self.shortgiris != 1 and self.longgiris != 1:
 
                     db = firestore.client()  # db e baglantı
 
-                    document = db.collection("engulfing"+timeframe).document(self.symbol)
-                    
+                    document = db.collection("engulfing" + timeframe).document(self.symbol)
 
                     document2 = db.collection("data2").document("balance")
 
@@ -115,17 +110,15 @@ class Macdema():
                     data2 = document2.get().to_dict()
                     """
                     doc_ref = db.collection(u"engulfing").document(self.symbol)
-
                     doc = doc_ref.get()
                     print(doc.to_dict())
                     print(doc.get('engulfing_bullish'))
                     """
 
-
                     document.set({
                         "symbol": self.symbol,
                         "engulfing_bullish": last_elementbullish_fire,
-                        "engulfing_bearish" : last_elementbearish_fire,
+                        "engulfing_bearish": last_elementbearish_fire,
                         "timeframe": self.timeframe
 
                     })
@@ -148,12 +141,12 @@ class Macdema():
                         order_approve = func.open_order_number(self.symbol)
                         print("order approve", order_approve)
                         print("quantity", self.quantity)
-                        if self.last_elementbullish == True or self.last_elementbearish==True :
+                        if self.last_elementbullish == True or self.last_elementbearish == True:
                             if order_approve == 1:
-    
+
                                 if balance > 200:
                                     try:
-                                        if self.last_elementbullish ==True:
+                                        if self.last_elementbullish == True:
                                             print('long gir')
                                             tele.telegram_bot('long gir-enfulging_strategy')
                                             tele.telegram_bot(symbol)
@@ -162,7 +155,7 @@ class Macdema():
                                                                price_sell_new)  # alıs olusturma fonk
 
                                             time.sleep(30)
-                                        elif self.last_elementbearish==True:
+                                        elif self.last_elementbearish == True:
                                             print("short_gir")
 
                                             tele.telegram_bot("short_gir-enfulging_strategy")
@@ -176,8 +169,8 @@ class Macdema():
 
 
                             else:
-                                    islemfazla = "islem sayisi 5 den fazlastrtegy2" + " " + self.symbol + " " + self.timeframe
-                                    tele.telegram_bot(islemfazla)
+                                islemfazla = "islem sayisi 5 den fazlastrtegy2" + " " + self.symbol + " " + self.timeframe
+                                tele.telegram_bot(islemfazla)
                         else:
                             print("setup olusmadı")
 
@@ -185,6 +178,7 @@ class Macdema():
                         tele.telegram_bot('fiyat alamadı2')
         except ccxt.BaseError as Error:
             print("[ERROR] ", Error)
+
 
 coin2 = Macdema('YFIUSDT', "2h", 0.005, 1.01, 0.991)
 coin1 = Macdema('HNTUSDT', "2h", 3, 1.01, 0.991)
@@ -204,7 +198,7 @@ coin14 = Macdema('ALGOUSDT', "2h", 80, 1.01, 0.991)
 coin15 = Macdema('TRXUSDT', "2h", 200, 1.01, 0.991)
 coin16 = Macdema('LRCUSDT', "2h", 50, 1.01, 0.991)
 coin17 = Macdema('SANDUSDT', "2h", 25, 1.01, 0.991)
-coin18 = Macdema('AVAXUSDT', "2h", 1, 1.01, 0.991)
+
 coin19 = Macdema('COTIUSDT', "2h", 220, 1.01, 0.991)
 coin20 = Macdema('LINKUSDT', "2h", 4, 1.01, 0.991)
 coin21 = Macdema('NEARUSDT', "2h", 9, 1.01, 0.991)
@@ -239,7 +233,7 @@ coin14a = Macdema('ALGOUSDT', "4h", 80, 1.02, 0.98)
 coin15a = Macdema('TRXUSDT', "4h", 200, 1.02, 0.98)
 coin16a = Macdema('LRCUSDT', "4h", 50, 1.02, 0.98)
 coin17a = Macdema('SANDUSDT', "4h", 25, 1.02, 0.98)
-coin18a = Macdema('AVAXUSDT', "4h", 1, 1.02, 0.98)
+
 
 coin19a = Macdema('COTIUSDT', "4h", 220, 1.02, 0.98)
 coin20a = Macdema('LINKUSDT', "4h", 4, 1.02, 0.98)
@@ -291,8 +285,6 @@ while True:
     coin16.dfall('LRCUSDT', "2h")
     time.sleep(30)
     coin17.dfall('SANDUSDT', "2h")
-    time.sleep(30)
-    coin18.dfall('AVAXUSDT', "2h")
     time.sleep(30)
     coin19.dfall('COTIUSDT', "2h")
     time.sleep(30)
@@ -357,8 +349,6 @@ while True:
     time.sleep(30)
     coin17a.dfall('SANDUSDT', "4h")
     time.sleep(30)
-    coin18a.dfall('AVAXUSDT', "4h")
-    time.sleep(30)
     coin19a.dfall('COTIUSDT', "4h")
     time.sleep(30)
     coin20a.dfall('LINKUSDT', "4h")
@@ -390,24 +380,3 @@ while True:
 
     tele.telegram_bot('server online5')
     time.sleep(4800)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
