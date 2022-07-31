@@ -149,11 +149,17 @@ class Macdema():
 
                 if self.str_sellsignallast2 != self.str_sellsignallast1:
                     print("esit_degil")
-                    if self.str_sellsignallast1 == "['BUY']" or self.str_sellsignallast1 == "['STRONG_BUY']":
+                    if self.str_sellsignallast1 == "['BUY']" and self.str_sellsignallast2 == "['SELL']" or self.str_sellsignallast2 == "['STRONG_SELL']" or self.str_sellsignallast2 == "['NEUTRAL']":
                         self.buysignallast = 1
 
-                    elif self.str_sellsignallast1 == "['SELL']" or self.str_sellsignallast1 == "['STRONG_SELL']":
+                    elif self.str_sellsignallast1 == "['SELL']" and self.str_sellsignallast2 == "['BUY']" or self.str_sellsignallast2 == "['STRONG_BUY']" or self.str_sellsignallast2 == "['NEUTRAL']":
                         self.sellsignallast = 1
+
+                    elif self.str_sellsignallast1 == "['STRONG_SELL']":
+                        self.sellsignallast = 1
+
+                    elif self.str_sellsignallast1 == "['STRONG_BUY']":
+                        self.buysignallast = 1
 
 
                     elif self.str_sellsignallast1 == "['NEUTRAL']" and self.str_sellsignallast2 == "['SELL']" or self.str_sellsignallast2 == "['STRONG_SELL']":
@@ -166,8 +172,8 @@ class Macdema():
 
                 try:
 
-                    client = Client(api_key="",
-                                    api_secret="")
+                    client = Client(api_key="YYchbhcI9jMSOIyTIFwHwJD2iEh71q4wH9RXZixtWU1UurBqFTgawLt2zkcTJm1T",
+                                    api_secret="E7vdV4JPaMtqbQGGozkSBNWeB5xPcDJSSD8AdqhHqPa0Ep6yQvbL8yYbtvWmPn4B")
                     result = client.futures_account_balance(asset='USDT',
                                                             recvWindow=49000)  # bir listeden asset cektik
                     balance = float(result[6]['withdrawAvailable'])
@@ -227,24 +233,24 @@ coin1 = Macdema('WOOUSDT', "1h", 100, 1.007, 0.993)
 coin3 = Macdema('CELOUSDT', "1h", 30, 1.007, 0.993)
 coin4 = Macdema('ARPAUSDT', "1h", 600, 1.007, 0.993)
 coin5 = Macdema('LPTUSDT', "1h", 3, 1.007, 0.993)
-coin6 = Macdema('KSMUSDT', "1h", 0.5, 1.007, 0.993)
+
 coin7 = Macdema('OMGUSDT', "1h", 15, 1.007, 0.993)
 coin8 = Macdema('OPUSDT', "1h", 40, 1.007, 0.993)
 coin9 = Macdema('UNFIUSDT', "1h", 6, 1.007, 0.993)
 coin10 = Macdema('PEOPLEUSDT', "1h", 100, 1.007, 0.993)
-coin11 = Macdema('DASHUSDT', "1h", 1, 1.007, 0.993)
+
 
 coin2a = Macdema('API3USDT', "2h", 15, 1.007, 0.993)
 coin1a = Macdema('WOOUSDT', "2h", 100, 1.007, 0.993)
 coin3a = Macdema('CELOUSDT', "2h", 30, 1.007, 0.993)
 coin4a = Macdema('ARPAUSDT', "2h", 600, 1.007, 0.993)
 coin5a = Macdema('LPTUSDT', "2h", 3, 1.007, 0.993)
-coin6a = Macdema('KSMUSDT', "2h", 0.5, 1.007, 0.993)
+
 coin7a = Macdema('OMGUSDT', "2h", 15, 1.007, 0.993)
 coin8a = Macdema('OPUSDT', "2h", 40, 1.007, 0.993)
 coin9a = Macdema('UNFIUSDT', "2h", 6, 1.007, 0.993)
 coin10a = Macdema('PEOPLEUSDT', "2h", 100, 1.007, 0.993)
-coin11a = Macdema('DASHUSDT', "1h", 1, 1.007, 0.993)
+
 
 while True:
     coin2.dfall('API3USDT', "1h")
@@ -257,8 +263,7 @@ while True:
     time.sleep(30)
     coin5.dfall('LPTUSDT', "1h")
     time.sleep(30)
-    coin6.dfall('KSMUSDT', "1h")
-    time.sleep(30)
+
     coin7.dfall('OMGUSDT', "1h")
     time.sleep(30)
     coin8.dfall('OPUSDT', "1h")
@@ -267,8 +272,7 @@ while True:
     time.sleep(30)
     coin10.dfall('PEOPLEUSDT', "1h")
     time.sleep(30)
-    coin11.dfall('DASHUSDT', "1h")
-    time.sleep(30)
+
 
     coin2a.dfall('API3USDT', "2h")
     time.sleep(30)
@@ -280,8 +284,7 @@ while True:
     time.sleep(30)
     coin5a.dfall('LPTUSDT', "2h")
     time.sleep(30)
-    coin6a.dfall('KSMUSDT', "2h")
-    time.sleep(30)
+
     coin7a.dfall('OMGUSDT', "2h")
     time.sleep(30)
     coin8a.dfall('OPUSDT', "2h")
@@ -289,9 +292,6 @@ while True:
     coin9a.dfall('UNFIUSDT', "2h")
     time.sleep(30)
     coin10a.dfall('PEOPLEUSDT', "2h")
-    time.sleep(30)
-    coin11a.dfall('DASHUSDT', "2h")
-    time.sleep(30)
 
-    tele.telegram_bot('server online8')
+
     time.sleep(900)
