@@ -2,6 +2,7 @@ import ccxt, config
 import pandas as pd
 from candlestick import candlestick
 import requests
+import send_tweet as tweeter
 
 import time
 import send_msg as tele
@@ -38,10 +39,17 @@ class Macdema():
         self.buyvalue = buyvalue
         self.sellvalue = sellvalue
         self.last_elementbullish = last_elementbullish
-        self.last_elementbearish = last_elementbearish
 
     def dfall(self, symbol, timeframe):
+        with open('temp.txt', 'w') as f:
+            texting = (self.symbol + '\n  ' + self.timeframe +'\n ' + str(self.quantity))
+            f.write(texting)
 
+        with open('temp.txt', 'r') as f:
+
+
+            tweeter.tweet(f.read())
+        print(type(self.quantity))
         exchange = ccxt.binance({
             "apiKey": config.apiKey,
             "secret": config.secretKey,
