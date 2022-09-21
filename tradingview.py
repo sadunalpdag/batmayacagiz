@@ -54,20 +54,54 @@ class Macdema():
         self.coipricefloat = coipricefloat
 
     def dfall(self, symbol, timeframe):
+        try:
+            exchange = ccxt.binance({
+                "apiKey": config.apiKey,
+                "secret": config.secretKey,
 
-        exchange = ccxt.binance({
-            "apiKey": config.apiKey,
-            "secret": config.secretKey,
-
-            'options': {
-                'defaultType': 'future'
-            },
-            'enableRateLimit': True,
-            'adjustForTimeDifference': True
-        })
-        order_approve = func.open_order_number(self.symbol)
+                'options': {
+                    'defaultType': 'future'
+                },
+                'enableRateLimit': True,
+                'adjustForTimeDifference': True
+            })
+            order_approve = func.open_order_number(self.symbol)
+        except:
+            tele.telegram_bot('fiyat alamadıtrading_cctx')
 
         try:
+            handler = TA_Handler(
+                symbol=symbol,
+                exchange="BINANCE",
+                screener="crypto",
+                interval=timeframe,
+                timeout=None,
+                proxies={'http': '47.242.84.173:3128', 'http': '181.205.20.195:999', 'http': '192.111.135.17:18302',
+                         'http': '103.108.228.185:7497'}
+            )
+
+            analysis = handler.get_analysis().summary
+
+            analysis_str = str(analysis)
+
+            symbolrec = analysis['RECOMMENDATION']
+
+            dt = time.gmtime()
+            ts = calendar.timegm(dt)
+            ts_str = str(ts)
+
+            x = self.symbol + self.timeframe + ts_str
+
+            db = firestore.client()  # db e baglantı
+
+            document = db.collection(self.symbol + self.timeframe).document(x)
+            docId = document.id
+            document.set({
+                "id": ts_str,
+
+                "position": symbolrec,
+
+            })
             if self.shortgiris == 1 or self.longgiris == 1 or order_approve == 0:  # alıs satıstan sonra 100 cycledan sonra tekrar işleme açma
                 self.sayici_giris_control += 1
                 if self.sayici_giris_control == 10:
@@ -81,38 +115,7 @@ class Macdema():
 
 
             else:
-                handler = TA_Handler(
-                    symbol=symbol,
-                    exchange="BINANCE",
-                    screener="crypto",
-                    interval=timeframe,
-                    timeout=None,
-                    proxies={'http': '47.242.84.173:3128', 'http': '181.205.20.195:999', 'http': '192.111.135.17:18302',
-                             'http': '103.108.228.185:7497'}
-                )
 
-                analysis = handler.get_analysis().summary
-
-                analysis_str = str(analysis)
-
-                symbolrec = analysis['RECOMMENDATION']
-
-                dt = time.gmtime()
-                ts = calendar.timegm(dt)
-                ts_str = str(ts)
-
-                x = self.symbol + self.timeframe + ts_str
-
-                db = firestore.client()  # db e baglantı
-
-                document = db.collection(self.symbol + self.timeframe).document(x)
-                docId = document.id
-                document.set({
-                    "id": ts_str,
-
-                    "position": symbolrec,
-
-                })
 
                 list1 = []
                 list2 = []
@@ -149,24 +152,45 @@ class Macdema():
 
                 if self.str_sellsignallast2 != self.str_sellsignallast1:
                     print("esit_degil")
-                    if self.str_sellsignallast1 == "['BUY']" and self.str_sellsignallast2 == "['SELL']" or self.str_sellsignallast2 == "['STRONG_SELL']" or self.str_sellsignallast2 == "['NEUTRAL']":
+                    if self.str_sellsignallast1 == "['BUY']" and self.str_sellsignallast2 != "['STRONG_BUY']" :
                         self.buysignallast = 1
+                        print ("x")
+                    elif self.str_sellsignallast1 == "['BUY']" and self.str_sellsignallast2 == "['STRONG_BUY']" :
+                         self.sellsignallast = 1
+                         print ("x")
 
-                    elif self.str_sellsignallast1 == "['SELL']" and self.str_sellsignallast2 == "['BUY']" or self.str_sellsignallast2 == "['STRONG_BUY']" or self.str_sellsignallast2 == "['NEUTRAL']":
+
+
+                    elif self.str_sellsignallast1 == "['SELL']" and self.str_sellsignallast2 != "['STRONG_SELL']" :
                         self.sellsignallast = 1
+                        print ("y")
+
+                    elif self.str_sellsignallast1 == "['SELL']" and self.str_sellsignallast2 == "['STRONG_SELL']" :
+                        self.buysignallast = 1
+                        print ("y")
 
                     elif self.str_sellsignallast1 == "['STRONG_SELL']":
                         self.sellsignallast = 1
+                        print("e")
 
                     elif self.str_sellsignallast1 == "['STRONG_BUY']":
                         self.buysignallast = 1
+                        print("z")
 
 
-                    elif self.str_sellsignallast1 == "['NEUTRAL']" and self.str_sellsignallast2 == "['SELL']" or self.str_sellsignallast2 == "['STRONG_SELL']":
+                    elif self.str_sellsignallast1 == "['NEUTRAL']" and self.str_sellsignallast2 == "['SELL']" :
                         self.buysignallast = 1
+                        print("b")
+                    elif self.str_sellsignallast1 == "['NEUTRAL']" and self.str_sellsignallast2 == "['STRONG_SELL']":
+                        self.buysignallast = 1
+                        print("b")
 
-                    elif self.str_sellsignallast1 == "['NEUTRAL']" and self.str_sellsignallast2 == "['BUY']" or self.str_sellsignallast2 == "['STRONG_BUY']":
+                    elif self.str_sellsignallast1 == "['NEUTRAL']" and self.str_sellsignallast2 == "['BUY']":
                         self.sellsignallast = 1
+                        print("m")
+                    elif self.str_sellsignallast1 == "['NEUTRAL']" and self.str_sellsignallast2 == "['STRONG_BUY']":
+                        self.sellsignallast = 1
+                        print("m")
                 print(self.sellsignallast)
                 print(self.buysignallast)
 
@@ -197,8 +221,12 @@ class Macdema():
                                     if self.buysignallast == 1:
                                         print('long gir')
                                         tele.telegram_bot('long gir-tradingview')
+                                        tele.telegram_bot(self.str_sellsignallast1 + self.str_sellsignallast2)
+                                        tele.telegram_bot(self.buysignallast)
+                                        tele.telegram_bot(self.sellsignallast)
                                         tele.telegram_bot(symbol)
                                         self.longgiris += 1
+                                        self.buysignallast = 0
                                         func.long_position(self.symbol, self.quantity,
                                                            price_sell_new)  # alıs olusturma fonk
 
@@ -207,8 +235,12 @@ class Macdema():
                                         print("short_gir")
 
                                         tele.telegram_bot("short_gir-tradingview")
+                                        tele.telegram_bot(self.str_sellsignallast1 + self.str_sellsignallast2)
+                                        tele.telegram_bot(self.buysignallast)
+                                        tele.telegram_bot(self.sellsignallast)
                                         tele.telegram_bot(symbol)
                                         self.shortgiris += 1
+                                        self.sellsignallast = 0
                                         func.short_position(self.symbol, self.quantity,
                                                             price_buy_new)  # satıs olusturma fonk
                                 except:
@@ -228,28 +260,63 @@ class Macdema():
             print("[ERROR] ", Error)
 
 
-coin2 = Macdema('API3USDT', "1h", 15, 1.007, 0.993)
-coin1 = Macdema('WOOUSDT', "1h", 100, 1.007, 0.993)
-coin3 = Macdema('CELOUSDT', "1h", 30, 1.007, 0.993)
-coin4 = Macdema('ARPAUSDT', "1h", 600, 1.007, 0.993)
-coin5 = Macdema('LPTUSDT', "1h", 3, 1.007, 0.993)
+coin2 = Macdema('API3USDT', "1h", 24, 1.007, 0.993)
+coin1 = Macdema('WOOUSDT', "1h", 143, 1.007, 0.993)
+coin3 = Macdema('CELOUSDT', "1h", 44, 1.007, 0.993)
+coin4 = Macdema('ARPAUSDT', "1h", 800, 1.007, 0.993)
+coin5 = Macdema('LPTUSDT', "1h", 6, 1.007, 0.993)
 
-coin7 = Macdema('OMGUSDT', "1h", 15, 1.007, 0.993)
-coin8 = Macdema('OPUSDT', "1h", 40, 1.007, 0.993)
-coin9 = Macdema('UNFIUSDT', "1h", 6, 1.007, 0.993)
-coin10 = Macdema('PEOPLEUSDT', "1h", 100, 1.007, 0.993)
+coin7 = Macdema('OMGUSDT', "1h", 24, 1.007, 0.993)
+coin8 = Macdema('OPUSDT', "1h", 60, 1.007, 0.993)
+coin9 = Macdema('UNFIUSDT', "1h", 12 ,1.007, 0.993)
+coin11 = Macdema('ARUSDT', "1h", 5, 1.007, 0.993)
+coin12 = Macdema('DOTUSDT', "1h", 6, 1.007, 0.993)
+coin13 = Macdema('ETCUSDT', "1h", 4, 1.007, 0.993)
+coin14 = Macdema('ALGOUSDT', "1h", 120, 1.007, 0.993)
+coin15 = Macdema('TRXUSDT', "1h", 280, 1.007, 0.993)
+coin16 = Macdema('LRCUSDT', "1h", 66, 1.007, 0.993)
+coin17 = Macdema('SANDUSDT', "1h", 33, 1.007, 0.993)
+coin18 = Macdema('YFIUSDT', "1h", 0.006, 1.007, 0.993)
+coin19 = Macdema('HNTUSDT', "1h", 4, 1.007, 0.993)
+coin20 = Macdema('SUSHIUSDT', "1h", 33, 1.007, 0.993)
+coin21 = Macdema('NEARUSDT', "1h", 10, 1.007, 0.993)
+coin22 = Macdema('MATICUSDT', "1h", 44, 1.007, 0.993)
+coin23 = Macdema('BELUSDT', "1h", 33, 1.007, 0.993)
+coin24 = Macdema('BLZUSDT', "1h", 220, 1.006, 0.994)
+coin25 = Macdema('KAVAUSDT', "1h", 16, 1.006, 0.994)
+coin26 = Macdema('CHZUSDT', "1h", 300, 1.006, 0.994)
 
 
-coin2a = Macdema('API3USDT', "2h", 15, 1.007, 0.993)
-coin1a = Macdema('WOOUSDT', "2h", 100, 1.007, 0.993)
-coin3a = Macdema('CELOUSDT', "2h", 30, 1.007, 0.993)
-coin4a = Macdema('ARPAUSDT', "2h", 600, 1.007, 0.993)
-coin5a = Macdema('LPTUSDT', "2h", 3, 1.007, 0.993)
 
-coin7a = Macdema('OMGUSDT', "2h", 15, 1.007, 0.993)
-coin8a = Macdema('OPUSDT', "2h", 40, 1.007, 0.993)
-coin9a = Macdema('UNFIUSDT', "2h", 6, 1.007, 0.993)
-coin10a = Macdema('PEOPLEUSDT', "2h", 100, 1.007, 0.993)
+
+
+coin2a = Macdema('API3USDT', "2h", 33, 1.007, 0.993)
+coin1a = Macdema('WOOUSDT', "2h", 190, 1.007, 0.993)
+coin3a = Macdema('CELOUSDT', "2h", 66, 1.007, 0.993)
+coin4a = Macdema('ARPAUSDT', "2h", 990, 1.007, 0.993)
+coin5a = Macdema('LPTUSDT', "2h", 7, 1.007, 0.993)
+
+coin7a = Macdema('OMGUSDT', "2h", 33, 1.007, 0.993)
+coin8a = Macdema('OPUSDT', "2h", 85, 1.007, 0.993)
+coin9a = Macdema('UNFIUSDT', "2h", 12, 1.007, 0.993)
+coin11a = Macdema('ARUSDT', "2h", 6, 1.007, 0.993)
+coin12a = Macdema('DOTUSDT', "2h", 7, 1.007, 0.993)
+coin13a = Macdema('ETCUSDT', "2h", 4, 1.007, 0.993)
+coin14a = Macdema('ALGOUSDT', "2h", 150, 1.007, 0.993)
+coin15a = Macdema('TRXUSDT', "2h", 400, 1.007, 0.993)
+coin16a = Macdema('LRCUSDT', "2h", 99, 1.007, 0.993)
+coin17a = Macdema('SANDUSDT', "2h", 44, 1.007, 0.993)
+coin18a = Macdema('YFIUSDT', "2h", 0.006, 1.007, 0.993)
+coin19a = Macdema('HNTUSDT', "2h", 4, 1.007, 0.993)
+coin20a = Macdema('SUSHIUSDT', "2h", 33, 1.007, 0.993)
+coin21a = Macdema('NEARUSDT', "2h", 12, 1.007, 0.993)
+coin22a = Macdema('MATICUSDT', "2h", 50, 1.007, 0.993)
+coin23a = Macdema('BELUSDT', "2h", 40, 1.007, 0.993)
+coin24a = Macdema('BLZUSDT', "2h", 220, 1.006, 0.994)
+coin25a = Macdema('KAVAUSDT', "2h", 18, 1.006, 0.994)
+coin26a = Macdema('CHZUSDT', "2h", 325, 1.006, 0.994)
+
+
 
 
 while True:
@@ -270,8 +337,42 @@ while True:
     time.sleep(30)
     coin9.dfall('UNFIUSDT', "1h")
     time.sleep(30)
-    coin10.dfall('PEOPLEUSDT', "1h")
+    coin11.dfall('ARUSDT', "1h")
     time.sleep(30)
+    coin12.dfall('DOTUSDT', "1h")
+    time.sleep(30)
+    coin13.dfall('ETCUSDT', "1h")
+    time.sleep(30)
+    coin14.dfall('ALGOUSDT', "1h")
+    time.sleep(30)
+    coin15.dfall('TRXUSDT', "1h")
+    time.sleep(30)
+    coin16.dfall('LRCUSDT', "1h")
+    time.sleep(30)
+    coin17.dfall('SANDUSDT', "1h")
+    time.sleep(30)
+    coin18.dfall('YFIUSDT', "1h")
+    time.sleep(30)
+    coin19.dfall('HNTUSDT', "1h")
+    time.sleep(30)
+
+
+    coin20.dfall('SUSHIUSDT', "1h")
+    time.sleep(30)
+    coin21.dfall('NEARUSDT', "1h")
+    time.sleep(30)
+    coin22.dfall('MATICUSDT', "1h")
+    time.sleep(30)
+    coin23.dfall('BELUSDT', "1h")
+    time.sleep(30)
+    coin24.dfall('BLZUSDT', "1h")
+    time.sleep(30)
+    coin25.dfall('KAVAUSDT', "1h")
+    time.sleep(30)
+    coin26.dfall('CHZUSDT', "1h")
+    time.sleep(30)
+
+
 
 
     coin2a.dfall('API3USDT', "2h")
@@ -291,7 +392,44 @@ while True:
     time.sleep(30)
     coin9a.dfall('UNFIUSDT', "2h")
     time.sleep(30)
-    coin10a.dfall('PEOPLEUSDT', "2h")
+    coin11a.dfall('ARUSDT', "2h")
+    time.sleep(30)
+    coin12a.dfall('DOTUSDT', "2h")
+    time.sleep(30)
+    coin13a.dfall('ETCUSDT', "2h")
+    time.sleep(30)
+    coin14a.dfall('ALGOUSDT', "2h")
+    time.sleep(30)
+    coin15a.dfall('TRXUSDT', "2h")
+    time.sleep(30)
+    coin16a.dfall('LRCUSDT', "2h")
+    time.sleep(30)
+    coin17a.dfall('SANDUSDT', "2h")
+    time.sleep(30)
+
+
+    coin18a.dfall('YFIUSDT', "2h")
+    time.sleep(30)
+    coin19a.dfall('HNTUSDT', "2h")
+    time.sleep(30)
+
+
+    coin20a.dfall('SUSHIUSDT', "2h")
+    time.sleep(30)
+    coin21a.dfall('NEARUSDT', "2h")
+    time.sleep(30)
+    coin22a.dfall('MATICUSDT', "2h")
+    time.sleep(30)
+    coin23a.dfall('BELUSDT', "2h")
+    time.sleep(30)
+    coin24a.dfall('BLZUSDT', "2h")
+    time.sleep(30)
+    coin25a.dfall('KAVAUSDT', "2h")
+    time.sleep(30)
+    coin26.dfall('CHZUSDT', "2h")
+    time.sleep(30)
+
+
 
 
     time.sleep(900)
