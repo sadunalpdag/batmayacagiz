@@ -201,8 +201,8 @@ class Macdema():
 
                 try:
 
-                    client = Client(api_key="YYchbhcI9jMSOIyTIFwHwJD2iEh71q4wH9RXZixtWU1UurBqFTgawLt2zkcTJm1T",
-                                    api_secret="E7vdV4JPaMtqbQGGozkSBNWeB5xPcDJSSD8AdqhHqPa0Ep6yQvbL8yYbtvWmPn4B")
+                    client = Client(api_key="",
+                                    api_secret="")
                     result = client.futures_account_balance(asset='USDT',
                                                             recvWindow=49000)  # bir listeden asset cektik
                     balance = float(result[6]['withdrawAvailable'])
