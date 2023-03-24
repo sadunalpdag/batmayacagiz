@@ -1,0 +1,31 @@
+import requests
+import json
+import pandas as pd
+
+url = "https://fapi.binance.com/fapi/v1/ticker/24hr"
+response = requests.get(url)
+
+
+
+if response.status_code == 200:
+    data = json.loads(response.text)
+    # Filter out data for HNTUSDT and RVNUSDT
+    filtered_data = [item for item in data if item["symbol"] not in ["HNTUSDT", "BALUSDT"]] 
+
+    for item in filtered_data:
+        # Extract percentage change from priceChangePercent field
+        pct_change = float(item["priceChangePercent"])
+    percentage_changes = []
+    for ticker in filtered_data:
+        symbol = ticker['symbol']
+        if symbol.endswith('USDT'):
+            price_change_percent = float(ticker['priceChangePercent'])
+            lastprice = float(ticker['lastPrice'])
+            percentage_changes.append({'Symbol': symbol, 'Price Change %': price_change_percent, 'price':lastprice})
+
+    # Create a Pandas DataFrame from the percentage changes
+
+
+    df = pd.DataFrame(percentage_changes)
+
+    print (df)
