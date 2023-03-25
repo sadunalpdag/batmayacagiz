@@ -1,0 +1,84 @@
+import pandas as pd
+import ccxt
+from openpyxl import Workbook
+
+# Initialize the Binance Futures exchange object
+exchange = ccxt.binance({
+    'enableRateLimit': True,
+    'options': {'defaultType': 'future'},
+})
+
+# Get a list of all futures coins
+exchange = ccxt.binance()
+coins = ["1INCH/USDT", "AAVE/USDT", "ADA/USDT", "ALGO/USDT", "ALICE/USDT",
+"ALPHA/USDT", "ANKR/USDT", "AR/USDT", "ARDR/USDT", "ATOM/USDT", "AUDIO/USDT",
+"AVAX/USDT", "AXS/USDT", "BADGER/USDT", "BAL/USDT", "BAND/USDT", "BAT/USDT",
+"BCH/USDT", "BEL/USDT", "BLZ/USDT", "BNB/USDT", "BNT/USDT", "BTC/USDT", "BTS/USDT",
+ "BTT/USDT", "CAKE/USDT", "CELO/USDT", "CHR/USDT", "CHZ/USDT", "CKB/USDT", "COMP/USDT", "COTI/USDT",
+  "CRV/USDT", "CTSI/USDT", "CVC/USDT", "DASH/USDT", "DCR/USDT", "DENT/USDT", "DGB/USDT", "DODO/USDT",
+   "DOGE/USDT", "DOT/USDT", "DYDX/USDT", "EGLD/USDT", "ENJ/USDT", "EOS/USDT", "ETC/USDT", "ETH/USDT",
+   "FIL/USDT", "FLOW/USDT", "FLM/USDT", "FTM/USDT", "GALA/USDT", "GRT/USDT", "HNT/USDT", "HOT/USDT",
+    "ICP/USDT", "ICX/USDT", "IOST/USDT", "IOTA/USDT", "KAVA/USDT", "KEEP/USDT", "KSM/USDT", "LINA/USDT",
+    "LINK/USDT", "LRC/USDT", "LSK/USDT", "LTC/USDT", "LUNA/USDT", "MANA/USDT", "MATIC/USDT", "MIR/USDT",
+    "MKR/USDT", "NANO/USDT", "NEAR/USDT", "NEO/USDT", "NKN/USDT", "OGN/USDT", "OMG/USDT", "ONE/USDT", "ONT/USDT",
+    "OXT/USDT", "PAXG/USDT", "PERP/USDT", "QTUM/USDT", "REN/USDT", "REP/USDT", "RLC/USDT", "RSR/USDT", "RUNE/USDT", "RVN/USDT", "SAND/USDT", "SC/USDT", "SKL/USDT", "SNX/USDT", "SOL/USDT", "SRM/USDT", "STORJ/USDT", "STX/USDT",
+"SUSHI/USDT", "SXP/USDT", "TFUEL/USDT", "THETA/USDT", "TOMO/USDT", "TRB/USDT", "TRU/USDT", "TRX/USDT", "TWT/USDT", "UMA/USDT"]
+
+# Create a dictionary to hold the counts for each coin
+coin_counts = {'Coin': [], 'High All OK': [], 'Low All OK': [], 'Reached Both': [], 'Low < Decreased 3.5%':[], 'High > 3.5%':[]}
+
+# Loop through all coins
+for coin in coins:
+    # Fetch daily candlestick data for the last 30 days
+    ohlcv = exchange.fetch_ohlcv(coin, '1d', since=exchange.milliseconds() - 360* 24 * 60 * 60 * 1000)
+
+    # Convert the data into a Pandas DataFrame
+    df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
+    df.set_index('timestamp', inplace=True)
+
+    # Calculate the 3% and 3.5% high and decrease values
+    df['3% High'] = df['open'] * 1.04
+    df['3.5% High'] = df['open'] * 1.045
+    df['3% Decrease'] = df['open'] * 0.96
+    df['3.5% Decrease'] = df['open'] * 0.955
+
+    # Add a column to track whether the 3% high value has been reached
+    df['3% High Reached'] = df['high'] >= df['3% High']
+    df['3% High Reached'] = df['3% High Reached'].astype(int)
+
+    df['3% low Reached'] = df['low'] <= df['3% Decrease']
+    df['3% low Reached'] = df['3% low Reached'].astype(int)
+
+    # Check if the high value is bigger than 3.5%
+    df['High > 3.5%'] = (df['high'] >= df['3.5% High']).astype(int)
+
+
+    df['High All OK'] = ((df['3% High Reached'] == 1) & (df['High > 3.5%'] == 0) ).astype(int)
+
+    # Check if the low value is smaller than the open value decreased by 3.5%
+    df['Low < Decreased 3.5%'] = df['low'] <= df['3.5% Decrease']
+    df['Low < Decreased 3.5%'] = df['Low < Decreased 3.5%'].astype(int)
+
+
+    df['Low All OK'] = ((df['3% low Reached'] == 1) & (df['Low < Decreased 3.5%'] == 0) ).astype(int)
+
+    df['Reached Both'] = ((df['high'] >= df['3% High']) & (df['low'] <= df['3% Decrease'])).astype(int)
+
+    # Add the counts to the dictionary
+    coin_counts['Coin'].append(coin)
+    coin_counts['High All OK'].append(df['High All OK'].sum())
+    coin_counts['Low All OK'].append(df['Low All OK'].sum())
+    coin_counts['Reached Both'].append(df['Reached Both'].sum())
+    coin_counts['High > 3.5%'].append(df['High > 3.5%'].sum())
+    coin_counts['Low < Decreased 3.5%'].append(df['Low < Decreased 3.5%'].sum())
+
+print (coin_counts)
+
+df_x= pd.DataFrame.from_dict(coin_counts)
+
+print(df_x)
+
+writer = pd.ExcelWriter('output.xlsx')
+df_x.to_excel(writer, index=False)
+writer.save()
