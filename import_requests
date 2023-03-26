@@ -1,0 +1,138 @@
+import requests
+import pandas as pd
+import key
+import time
+import json
+
+from binance.client import Client
+import functions as func
+
+import gspread
+import datetime
+
+import numpy as np
+
+
+def percent(row):
+
+    c = 0 # bunları 0 lamadık girdi 100$
+    b = 0 # bunları 0 lamadık
+    e = 0 # bunları 0 lamadık
+    d = 0 # bunları 0 lamadık
+
+    # Replace YOUR_API_KEY and YOUR_SECRET_KEY with your Binance API credentials
+    api_key = key.Pkey
+    secret_key = key.Skey
+
+    gc =gspread.service_account(filename='gspread.json')
+    sh2 = gc.open('x').get_worksheet(1)
+
+    x = datetime.datetime.now()
+
+
+
+
+    sh2.update('g6', x.strftime("%H"))
+    sh2.update('g7', x.strftime("%M"))
+
+    cell = sh2.cell(1,2).value
+    print (cell)
+
+
+
+    url = "https://fapi.binance.com/fapi/v1/ticker/24hr"
+    response = requests.get(url)
+
+
+
+    if response.status_code == 200:
+        data = json.loads(response.text)
+        # Filter out data for HNTUSDT and RVNUSDT
+        filtered_data = [item for item in data if item["symbol"] not in ["HNTUSDT","LTCUSDT","LINAUSDT"]]
+
+        for item in filtered_data:
+            # Extract percentage change from priceChangePercent field
+            pct_change = float(item["priceChangePercent"])
+        percentage_changes = []
+        for ticker in filtered_data:
+            symbol = ticker['symbol']
+            if symbol.endswith('USDT'):
+                price_change_percent = float(ticker['priceChangePercent'])
+                lastprice = float(ticker['lastPrice'])
+                percentage_changes.append({'Symbol': symbol, 'Price Change %': price_change_percent, 'price':lastprice})
+
+        # Create a Pandas DataFrame from the percentage changes
+
+
+    cell5 = float(sh2.cell(2,6).value)
+    df = pd.DataFrame(percentage_changes)
+    df['B'] = np.divide(cell5,df['price'])# burada cell 5 den gelen sayıyı price a boluyoruz
+
+    l= len(df.index)
+
+    df_sort=df.sort_values(by=['Price Change %']) # burada price change gore sort ediyoruz
+
+
+
+    # Print the DataFrame
+    a = df_sort.iloc[:,2]# fiyat
+    x = df_sort.iloc[:,1]          #fiyat değişimi
+    y = df_sort.iloc[:,0] #sembol +
+    divided = df_sort.iloc[:,3]
+
+    print (cell5)
+    n = (x.iloc[-1-row]) #fiyat değişimi +
+    m = (y.iloc[-1-row]) #sembol +
+    xx = divided.iloc[-1-row]  #alıs_belirleme
+    b = float(round (xx,0)) #yuvarlama
+    print("xx")
+    cell = float(sh2.cell(2,7).value)
+
+    cell2 = float(sh2.cell(2,8).value)-0.105
+    print (cell2)
+    cell3 = float(sh2.cell(2,9).value)
+    print (cell3)
+    cell4 = float(sh2.cell(2,10).value)
+    print (cell4)
+
+    mm = a.iloc[-1] *cell2 # short profit
+    print (mm)
+    d = float(round(mm,4))
+
+
+    o = (x.iloc[-l+row])
+    p = (y.iloc[-l+row])# sembol -
+    zz = divided.iloc[-l+row]
+    c = float(round(zz,0))
+    yy = a.iloc[-l+row] *cell #long profit
+    print (yy)
+    e = float(round(yy,4))
+    print(n) #artısta yuzde
+    print(m) #sembol short
+    print (b) #quantity short
+    print(o)  #dususte yuzde
+    print(p)  #sembol long
+    print (c) #quantity long
+    print (e)
+    print (d)
+
+    order_approve1 = func.open_order_number(m) # sembol + yani short için
+    order_approve2 = func.open_order_number(p) # sembol - long için
+    if order_approve2 == 1:
+        gc =gspread.service_account(filename='gspread.json')
+        sh2 = gc.open('x').get_worksheet(1)
+        if o < cell3:
+            try:
+
+                func.long_position(p, c, e)
+            except:
+                sh2.append_row([p,c,e], table_range = "a5")
+    if order_approve1 ==1:
+        if n > cell4 :
+            try:
+                func.short_position(m, b, d)
+            except:
+                sh2.append_row([m,b,d],table_range = "a5")
+
+
+
