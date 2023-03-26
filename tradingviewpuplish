@@ -1,0 +1,797 @@
+import pandas as pd
+import ccxt, config
+import gspread
+
+import time
+import send_msg as tele
+
+import functions as func
+
+from binance.client import Client
+import firebase_admin
+from firebase_admin import credentials, firestore
+from tradingview_ta import TA_Handler, Interval, Exchange
+import calendar
+import key
+import datetime
+
+longgiris = 0
+shortgiris = 0
+sayici_giris_control = 0
+silme_sayma = 0
+sheetsymbolx = 0
+sheetssymboly = 0
+macdlast = 0
+engulfing = 0
+buysignallast = 0
+sellsignallast = 0
+buysignallast_1d = 0
+sellsignallast_1d = 0
+coipricefloat = 0
+sellsignallast1 = 0
+sellsignallast2 = 0
+str_sellsignallast1 = 0
+str_sellsignallast2 = 0
+order_approve = 0
+sellsignallast1_1d = 0
+
+str_sellsignallast1_1d= 0
+
+
+kimlik = credentials.Certificate("ema_class.json")
+
+app = firebase_admin.initialize_app(kimlik)
+
+
+class Macdema():
+
+    def __init__(self, symbol, timeframe, quantity, buyvalue, sellvalue,cellx,celly,cell_approve):
+        self.symbol = symbol
+        self.longgiris = longgiris
+        self.shortgiris = shortgiris
+        self.timeframe = timeframe
+        self.sayici_giris_control = sayici_giris_control
+        self.quantity = quantity
+        self.buyvalue = buyvalue
+        self.sellvalue = sellvalue
+        self.buysignallast = buysignallast
+        self.sellsignallast = sellsignallast
+        self.buysignallast_1d = buysignallast_1d
+        self.sellsignallast_1d = sellsignallast_1d
+        self.sellsignallast1 = sellsignallast1
+        self.sellsignallast2 = sellsignallast2
+        self.str_sellsignallast1 = str_sellsignallast1
+        self.str_sellsignallast2 = str_sellsignallast2
+        self.order_approve = order_approve
+        self.sellsignallast1_1d = sellsignallast1_1d
+        self.cellx = cellx
+        self.celly = celly
+        self.cell_approve = cell_approve
+
+        self.str_sellsignallast1_1d = str_sellsignallast1_1d
+
+
+        self.coipricefloat = coipricefloat
+
+    def dfall1(self, symbol, timeframe):
+
+
+        try:
+            handler = TA_Handler(
+                symbol=symbol,
+                exchange="BINANCE",
+                screener="crypto",
+                interval=timeframe,
+                timeout=None,
+                proxies={'http': '47.242.84.173:3128', 'http': '181.205.20.195:999', 'http': '192.111.135.17:18302',
+                         'http': '103.108.228.185:7497'}
+            )
+
+            analysis = handler.get_analysis().summary
+
+            analysis_str = str(analysis)
+
+            symbolrec = analysis['RECOMMENDATION']
+            dt = time.gmtime()
+            ts = calendar.timegm(dt)
+            ts_str = str(ts)
+
+            x = self.symbol + self.timeframe + ts_str
+
+            db = firestore.client()  # db e baglantı
+
+            docs = db.collection (self.symbol + self.timeframe).get()
+
+            for doc in docs:
+                key = doc.id
+                db.collection(self.symbol + self.timeframe).document(key).delete()
+                print("silindi" + self.symbol + self.timeframe)
+
+            document = db.collection(self.symbol + self.timeframe).document(x)
+            docId = document.id
+            document.set({
+                "id": ts_str,
+
+                "position": symbolrec,
+
+            })
+
+
+
+
+
+
+
+
+        except :
+            print("silindi2")
+
+    def dfall(self, symbol, timeframe):
+
+
+
+        try:
+            exchange = ccxt.binance({
+                "apiKey": config.apiKey,
+                "secret": config.secretKey,
+
+                'options': {
+                    'defaultType': 'future'
+                },
+                'enableRateLimit': True,
+                'adjustForTimeDifference': True
+            })
+            self.order_approve = func.open_order_number(self.symbol)
+        except:
+             print("silindi2")
+
+        try:
+            handler = TA_Handler(
+                symbol=symbol,
+                exchange="BINANCE",
+                screener="crypto",
+                interval=timeframe,
+                timeout=None,
+                proxies={'http': '47.242.84.173:3128', 'http': '181.205.20.195:999', 'http': '192.111.135.17:18302',
+                         'http': '103.108.228.185:7497'}
+            )
+
+            analysis = handler.get_analysis().summary
+
+            analysis_str = str(analysis)
+
+            symbolrec = analysis['RECOMMENDATION']
+
+            dt = time.gmtime()
+            ts = calendar.timegm(dt)
+            ts_str = str(ts)
+
+            x = self.symbol + self.timeframe + ts_str
+
+            db = firestore.client()  # db e baglantı
+
+            document = db.collection(self.symbol + self.timeframe).document(x)
+            docId = document.id
+            document.set({
+                "id": ts_str,
+
+                "position": symbolrec,
+
+            })
+
+
+
+            print (silme_sayma)
+             # 1 gunluk data
+            handler = TA_Handler(
+                symbol=symbol,
+                exchange="BINANCE",
+                screener="crypto",
+                interval="1d",
+                timeout=None,
+                proxies={'http': '47.242.84.173:3128', 'http': '181.205.20.195:999', 'http': '192.111.135.17:18302',
+                         'http': '103.108.228.185:7497'}
+            )
+
+            analysis1d = handler.get_analysis().summary
+
+            analysis_str1d = str(analysis1d)
+
+            symbolrec1d = analysis1d['RECOMMENDATION']
+
+            dt = time.gmtime()
+            ts = calendar.timegm(dt)
+            ts_str = str(ts)
+
+            x = self.symbol + "4h" + ts_str
+
+
+
+            document = db.collection(self.symbol + "4h").document(x)
+            docId = document.id
+            document.set({
+                "id": ts_str,
+
+                "position": symbolrec1d,
+
+            })
+            list3 = []
+
+            list4 = []
+
+
+            snapshots = list(db.collection(self.symbol + "1d").get())
+            df = pd.DataFrame()
+            for snap in snapshots:
+                X = snap.to_dict()
+                key = ['position']
+                m_1d = ([snap.get(k) for k in key])
+
+                key2 = ['id']
+                n_1d = ([snap.get(k) for k in key2])
+                list3.append(m_1d)
+                list4.append(n_1d)
+
+            #print(list3)
+            #print(list4)
+            d_1d = {'situation': list3, 'time': list4}
+            #print(d_1d)
+            df_1d = pd.DataFrame(d_1d, columns=['situation', 'time'])
+            #print(df_1d)
+            sellsignal_1d = df_1d.iloc[:, 0]  # bununla data set içindeki 1. kolonu cekiyorum
+            self.sellsignallast1_1d = (sellsignal_1d.iloc[-1])
+
+            #print(self.sellsignallast1_1d)
+            #print(type(sellsignallast1_1d))
+            self.str_sellsignallast1_1d = str(self.sellsignallast1_1d)
+
+            #print(type(self.str_sellsignallast1_1d))
+
+            if self.str_sellsignallast1_1d == "['BUY']" or self.str_sellsignallast1_1d == "['STRONG_BUY']" :
+                        self.buysignallast_1d = 1
+                        print ("genel_buy")
+            elif self.str_sellsignallast1_1d == "['SELL']" or self.str_sellsignallast1_1d == "['STRONG_SELL']" :
+                        self.sellsignallast_1d = 1
+                        print ("genel_sell")
+
+
+            #print(self.symbol)
+            #print(symbolrec1d)
+            if self.shortgiris == 1 or self.longgiris == 1 or self.order_approve == 0:  # alıs satıstan sonra 100 cycledan sonra tekrar işleme açma
+                self.sayici_giris_control += 1
+                if self.sayici_giris_control == 10:
+                    #print(symbol, timeframe, self.sayici_giris_control)
+                    self.longgiris = 0
+                    self.shortgiris = 0
+                    self.sellsignallast = 0
+                    self.buysignallast = 0
+
+                    self.sayici_giris_control = 0
+
+
+            else:
+
+
+                list1 = []
+                list2 = []
+
+                snapshots = list(db.collection(self.symbol + self.timeframe).get())
+                df = pd.DataFrame()
+                for snap in snapshots:
+                    X = snap.to_dict()
+                    key = ['position']
+                    m = ([snap.get(k) for k in key])
+
+                    key2 = ['id']
+                    n = ([snap.get(k) for k in key2])
+                    list1.append(m)
+                    list2.append(n)
+
+                #print(list1)
+                #print(list2)
+                d = {'situation': list1, 'time': list2}
+                print(d)
+                df = pd.DataFrame(d, columns=['situation', 'time'])
+                print(df)
+                sellsignal = df.iloc[:, 0]  # bununla data set içindeki 1. kolonu cekiyorum
+                self.sellsignallast1 = (sellsignal.iloc[-1])
+                self.sellsignallast2 = (sellsignal.iloc[-2])
+                #print(self.sellsignallast2)
+                #print(self.sellsignallast1)
+                #print(type(sellsignallast1))
+                #print(type(sellsignallast2))
+                self.str_sellsignallast1 = str(self.sellsignallast1)
+                self.str_sellsignallast2 = str(self.sellsignallast2)
+                #print(type(self.str_sellsignallast1))
+                #print(type(self.str_sellsignallast2))
+
+                if self.str_sellsignallast2 != self.str_sellsignallast1:
+                    print("esit_degil")
+                    if self.str_sellsignallast1 == "['BUY']" and self.str_sellsignallast2 != "['STRONG_BUY']" :
+                        self.buysignallast = 1
+                        print ("x")
+                    elif self.str_sellsignallast1 == "['BUY']" and self.str_sellsignallast2 == "['STRONG_BUY']" :
+                         self.sellsignallast = 1
+                         print ("x")
+
+
+
+                    elif self.str_sellsignallast1 == "['SELL']" and self.str_sellsignallast2 != "['STRONG_SELL']" :
+                        self.sellsignallast = 1
+                        print ("y")
+
+                    elif self.str_sellsignallast1 == "['SELL']" and self.str_sellsignallast2 == "['STRONG_SELL']" :
+                        self.buysignallast = 1
+                        print ("y")
+
+                    elif self.str_sellsignallast1 == "['STRONG_SELL']":
+                        self.sellsignallast = 1
+                        print("e")
+
+                    elif self.str_sellsignallast1 == "['STRONG_BUY']":
+                        self.buysignallast = 1
+                        print("z")
+
+
+                    elif self.str_sellsignallast1 == "['NEUTRAL']" and self.str_sellsignallast2 == "['SELL']" :
+                        self.buysignallast = 1
+                        print("b")
+                    elif self.str_sellsignallast1 == "['NEUTRAL']" and self.str_sellsignallast2 == "['STRONG_SELL']":
+                        self.buysignallast = 1
+                        print("b")
+
+                    elif self.str_sellsignallast1 == "['NEUTRAL']" and self.str_sellsignallast2 == "['BUY']":
+                        self.sellsignallast = 1
+                        print("m")
+                    elif self.str_sellsignallast1 == "['NEUTRAL']" and self.str_sellsignallast2 == "['STRONG_BUY']":
+                        self.sellsignallast = 1
+                        print("m")
+                #print(self.sellsignallast)
+                #print(self.buysignallast)
+
+                try:
+
+
+
+                    price = client.futures_symbol_ticker(symbol=self.symbol, recvWindow=45000)
+
+                    tp_price = func.price_sell_buy(price, self.buyvalue, self.sellvalue)
+                    price_sell_new = tp_price[0]
+                    price_buy_new = tp_price[1]
+                    #print(price_buy_new)
+                    #print(price_sell_new)
+                    self.order_approve = func.open_order_number(self.symbol)
+                    #print("order approve", self.order_approve)
+                    #print("quantity", self.quantity)
+
+
+
+
+                    if self.buysignallast == 1 or self.sellsignallast == 1:
+
+                        if self.order_approve == 1:
+
+
+                            if self.order_approve == 1:
+
+
+                                try:
+
+
+                                    if self.buysignallast == 1 and self.buysignallast_1d == 1:
+                                        print('long gir')
+                                        try:
+                                            func.long_position(self.symbol, self.quantity,
+                                                           price_sell_new)  # alıs olusturma fonk
+                                        except:
+                                            sh2.append([self.symbol,self.quantity,price_sell_new,"trade"])
+                                        self.longgiris += 1
+                                        self.buysignallast = 0
+                                        self.buysignallast_1d = 0
+
+
+
+
+
+
+                                        time.sleep(10)
+                                    elif self.sellsignallast == 1 and self.sellsignallast_1d == 1:
+                                        print("short_gir")
+                                        try:
+                                            func.short_position(self.symbol, self.quantity,
+                                                            price_buy_new)  # satıs olusturma fonk
+                                        except:
+                                            sh2.append([self.symbol,self.quantity,price_buy_new,"trade"])
+                                        self.shortgiris += 1
+                                        self.sellsignallast = 0
+                                        self.sellsignallast_1d = 0
+
+
+
+
+
+                                except:
+                                     print("setup olusmadi")
+
+
+
+                        else:
+                            sh2.append(["5den fazla"])
+
+
+                    else:
+                        print("setup olusmadi")
+
+                except:
+                    print("setup olusmadi")
+        except :
+            print("[ERROR] ")
+
+
+coin2 = Macdema('API3USDT', "1h", 20, 1.004, 0.996,2,2,5)
+coin1 = Macdema('WOOUSDT', "1h", 140, 1.004, 0.996,3,2,5)
+coin3 = Macdema('CELOUSDT', "1h", 40, 1.004, 0.996,4,2,5)
+coin4 = Macdema('ARPAUSDT', "1h", 750, 1.004, 0.996,5,2,5)
+coin5 = Macdema('LPTUSDT', "1h",7 , 1.004, 0.996,6,2,5)
+coin6 = Macdema('KLAYUSDT', "1h", 130, 1.004, 0.996,7,2,5)
+
+
+coin7 = Macdema('OMGUSDT', "1h", 30, 1.004, 0.9968,8,2,5)
+coin8 = Macdema('OPUSDT', "1h", 45, 1.004, 0.996,9,2,5)
+coin9 = Macdema('UNFIUSDT', "1h", 13 ,1.004, 0.996,10,2,5)
+coin11 = Macdema('ARUSDT', "1h", 5, 1.004, 0.996,11,2,5)
+coin12 = Macdema('DOTUSDT', "1h", 6, 1.004, 0.996,12,2,5)
+coin13 = Macdema('ETCUSDT', "1h", 3, 1.004, 0.996,13,2,5)
+coin14 = Macdema('ALGOUSDT', "1h", 150, 1.004, 0.996,14,2,5)
+coin15 = Macdema('TRXUSDT', "1h", 250, 1.004, 0.996,15,2,5)
+coin16 = Macdema('LRCUSDT', "1h", 50, 1.004, 0.996,16,2,5)
+coin17 = Macdema('SANDUSDT', "1h", 31, 1.004, 0.996,17,2,5)
+coin18 = Macdema('YFIUSDT', "1h", 0.006, 1.004, 0.996,18,2,5)
+coin19 = Macdema('MASKUSDT', "1h", 35, 1.004, 0.996,19,2,5)
+coin20 = Macdema('SUSHIUSDT', "1h", 30, 1.004, 0.996,20,2,5)
+coin21 = Macdema('NEARUSDT', "1h", 13, 1.004, 0.996,21,2,5)
+coin22 = Macdema('MATICUSDT', "1h", 35, 1.004, 0.996,22,2,5)
+coin23 = Macdema('BELUSDT', "1h", 35, 1.004, 0.996,23,2,5)
+
+
+
+
+
+
+
+
+coin2a = Macdema('API3USDT', "2h", 30, 1.004, 0.996,2,3,5)
+coin1a = Macdema('WOOUSDT', "2h", 300, 1.004, 0.996,3,3,5)
+coin3a = Macdema('CELOUSDT', "2h", 65, 1.004, 0.996,4,3,5)
+coin4a = Macdema('ARPAUSDT', "2h", 800, 1.004, 0.996,5,3,5)
+coin5a = Macdema('LPTUSDT', "2h", 7, 1.004, 0.996,6,3,5)
+coin6a = Macdema('KLAYUSDT', "2h", 130, 1.004, 0.996,7,3,5)
+
+coin7a = Macdema('OMGUSDT', "2h", 35, 1.004, 0.996,8,3,5)
+coin8a = Macdema('OPUSDT', "2h", 60, 1.004, 0.996,9,3,5)
+coin9a = Macdema('UNFIUSDT', "2h", 13, 1.004, 0.996,10,3,5)
+coin11a = Macdema('ARUSDT', "2h", 6, 1.004, 0.996,11,3,5)
+coin12a = Macdema('DOTUSDT', "2h", 7, 1.004, 0.996,12,3,5)
+coin13a = Macdema('ETCUSDT', "2h", 3, 1.004, 0.996,13,3,5)
+coin14a = Macdema('ALGOUSDT', "2h", 180, 1.004, 0.996,14,3,5)
+coin15a = Macdema('TRXUSDT', "2h", 300, 1.004, 0.996,15,3,5)
+coin16a = Macdema('LRCUSDT', "2h", 115, 1.004, 0.996,16,3,5)
+coin17a = Macdema('SANDUSDT', "2h", 36, 1.004, 0.996,17,3,5)
+coin18a = Macdema('YFIUSDT', "2h", 0.006, 1.004, 0.996,18,3,5)
+coin19a = Macdema('MASKUSDT', "2h", 25, 1.004, 0.996,19,3,5)
+coin20a = Macdema('SUSHIUSDT', "2h", 25, 1.004, 0.996,20,3,5)
+coin21a = Macdema('NEARUSDT', "2h", 13, 1.004, 0.996,21,3,5)
+coin22a = Macdema('MATICUSDT', "2h", 60, 1.004, 0.996,22,3,5)
+coin23a = Macdema('BELUSDT', "2h", 36, 1.004, 0.996,23,3,5)
+
+
+
+coin2b = Macdema('API3USDT', "4h", 20, 1.007, 0.993,2,4,5)
+coin1b = Macdema('WOOUSDT', "4h", 125, 1.007, 0.993,3,4,5)
+coin3b = Macdema('CELOUSDT', "4h", 40, 1.007, 0.993,4,4,5)
+coin4b = Macdema('ARPAUSDT', "4h", 700, 1.007, 0.993,5,4,5)
+coin5b = Macdema('LPTUSDT', "4h", 4, 1.007, 0.993,6,4,5)
+coin6b = Macdema('KLAYUSDT', "4h", 3, 1.007, 0.993,7,4,5)
+
+coin7b = Macdema('OMGUSDT', "4h", 20, 1.007, 0.993,8,4,5)
+coin8b = Macdema('OPUSDT', "4h", 55, 1.007, 0.993,9,4,5)
+coin9b = Macdema('UNFIUSDT', "4h", 8, 1.007, 0.993,10,4,5)
+
+coin11b = Macdema('ARUSDT', "4h", 3, 1.007, 0.993,11,4,5)
+coin12b = Macdema('DOTUSDT', "4h", 4, 1.007, 0.993,12,4,5)
+coin13b = Macdema('ETCUSDT', "4h", 1.8, 1.007, 0.993,13,4,5)
+coin14b = Macdema('ALGOUSDT', "4h", 100, 1.007, 0.993,14,4,5)
+coin15b = Macdema('TRXUSDT', "4h", 240, 1.007, 0.993,15,4,5)
+coin16b = Macdema('LRCUSDT', "4h", 70, 1.007, 0.993,16,4,5)
+coin17b = Macdema('SANDUSDT', "4h", 30, 1.007, 0.993,17,4,5)
+
+coin18b = Macdema('YFIUSDT', "4h", 0.005, 1.007, 0.993,18,4,5)
+coin19b = Macdema('MASKUSDT', "4h", 3, 1.007, 0.993,19,4,5)
+coin20b = Macdema('SUSHIUSDT', "4h", 30, 1.007, 0.993,20,4,5)
+coin21b = Macdema('NEARUSDT', "4h", 12, 1.007, 0.993,21,4,5)
+coin22b = Macdema('MATICUSDT', "4h", 45, 1.007, 0.993,22,4,5)
+coin23b = Macdema('BELUSDT', "4h", 55, 1.007, 0.993,23,4,5)
+
+
+while True:
+    gc =gspread.service_account(filename='gspread.json')
+    sh2 = gc.open('x').get_worksheet(1)
+    x = datetime.datetime.now()
+    sh2.update('j6', x.strftime("%H"))
+    sh2.update('j7', x.strftime("%M"))
+    print("basladi")
+
+
+
+
+
+    coin2.dfall('API3USDT', "1h")
+    time.sleep(2)
+    coin1.dfall('WOOUSDT', "1h")
+    time.sleep(2)
+    coin3.dfall('CELOUSDT', "1h")
+    time.sleep(2)
+    coin4.dfall('ARPAUSDT', "1h")
+    time.sleep(2)
+    coin5.dfall('LPTUSDT', "1h")
+    time.sleep(2)
+    coin6.dfall('KLAYUSDT', "1h")
+    time.sleep(2)
+
+    coin7.dfall('OMGUSDT', "1h")
+    time.sleep(2)
+    coin8.dfall('OPUSDT', "1h")
+    time.sleep(2)
+    coin9.dfall('UNFIUSDT', "1h")
+    time.sleep(2)
+    coin11.dfall('ARUSDT', "1h")
+    time.sleep(2)
+    coin12.dfall('DOTUSDT', "1h")
+    time.sleep(2)
+    coin13.dfall('ETCUSDT', "1h")
+    time.sleep(2)
+    coin14.dfall('ALGOUSDT', "1h")
+    time.sleep(2)
+    coin15.dfall('TRXUSDT', "1h")
+    time.sleep(2)
+    coin16.dfall('LRCUSDT', "1h")
+    time.sleep(2)
+    coin17.dfall('SANDUSDT', "1h")
+    time.sleep(2)
+
+    coin18.dfall('YFIUSDT', "1h")
+    time.sleep(2)
+    coin19.dfall('MASKUSDT', "1h")
+    time.sleep(2)
+
+    coin20.dfall('SUSHIUSDT', "1h")
+    time.sleep(2)
+
+    coin21.dfall('NEARUSDT', "1h")
+    time.sleep(2)
+
+    coin22.dfall('MATICUSDT', "1h")
+    time.sleep(2)
+    coin23.dfall('BELUSDT', "1h")
+    time.sleep(2)
+
+
+
+    coin2a.dfall('API3USDT', "2h")
+    time.sleep(2)
+    coin1a.dfall('WOOUSDT', "2h")
+    time.sleep(2)
+    coin3a.dfall('CELOUSDT', "2h")
+    time.sleep(2)
+    coin4a.dfall('ARPAUSDT', "2h")
+    time.sleep(2)
+    coin5a.dfall('LPTUSDT', "2h")
+    time.sleep(2)
+    coin6a.dfall('KLAYUSDT', "2h")
+    time.sleep(2)
+
+    coin7a.dfall('OMGUSDT', "2h")
+    time.sleep(2)
+    coin8a.dfall('OPUSDT', "2h")
+    time.sleep(2)
+    coin9a.dfall('UNFIUSDT', "2h")
+    time.sleep(2)
+    coin11a.dfall('ARUSDT', "2h")
+    time.sleep(2)
+    coin12a.dfall('DOTUSDT', "2h")
+    time.sleep(2)
+    coin13a.dfall('ETCUSDT', "2h")
+    time.sleep(2)
+    coin14a.dfall('ALGOUSDT', "2h")
+    time.sleep(2)
+    coin15a.dfall('TRXUSDT', "2h")
+    time.sleep(2)
+    coin16a.dfall('LRCUSDT', "2h")
+    time.sleep(2)
+    coin17a.dfall('SANDUSDT', "2h")
+    time.sleep(2)
+
+    coin18a.dfall('YFIUSDT', "2h")
+    time.sleep(2)
+    coin19a.dfall('MASKUSDT', "2h")
+    time.sleep(2)
+
+    coin20a.dfall('SUSHIUSDT', "2h")
+    time.sleep(2)
+    coin21a.dfall('NEARUSDT', "2h")
+    time.sleep(2)
+
+    coin22a.dfall('MATICUSDT', "2h")
+    time.sleep(2)
+    coin23a.dfall('BELUSDT', "2h")
+    time.sleep(2)
+
+
+
+    if silme_sayma == 3:
+
+        silme_sayma = 0
+        coin2.dfall1('API3USDT', "1h")
+        time.sleep(2)
+        coin1.dfall1('WOOUSDT', "1h")
+        time.sleep(2)
+        coin3.dfall1('CELOUSDT', "1h")
+        time.sleep(2)
+        coin4.dfall1('ARPAUSDT', "1h")
+        time.sleep(2)
+        coin5.dfall1('LPTUSDT', "1h")
+        time.sleep(2)
+        coin6.dfall1('KLAYUSDT', "1h")
+        time.sleep(2)
+
+        coin7.dfall1('OMGUSDT', "1h")
+        time.sleep(2)
+        coin8.dfall1('OPUSDT', "1h")
+        time.sleep(2)
+        coin9.dfall1('UNFIUSDT', "1h")
+        time.sleep(2)
+        coin11.dfall1('ARUSDT', "1h")
+        time.sleep(2)
+        coin12.dfall1('DOTUSDT', "1h")
+        time.sleep(2)
+        coin13.dfall1('ETCUSDT', "1h")
+        time.sleep(2)
+        coin14.dfall1('ALGOUSDT', "1h")
+        time.sleep(2)
+        coin15.dfall1('TRXUSDT', "1h")
+        time.sleep(2)
+        coin16.dfall1('LRCUSDT', "1h")
+        time.sleep(2)
+        coin17.dfall1('SANDUSDT', "1h")
+        time.sleep(2)
+
+        coin18.dfall1('YFIUSDT', "1h")
+        time.sleep(2)
+        coin19.dfall1('MASKUSDT', "1h")
+        time.sleep(2)
+
+        coin20.dfall1('SUSHIUSDT', "1h")
+        time.sleep(2)
+
+        coin21.dfall1('NEARUSDT', "1h")
+        time.sleep(2)
+
+
+
+        coin22.dfall1('MATICUSDT', "1h")
+        time.sleep(2)
+        coin23.dfall1('BELUSDT', "1h")
+        time.sleep(2)
+
+
+
+
+
+
+        coin2a.dfall1('API3USDT', "2h")
+        time.sleep(2)
+        coin1a.dfall1('WOOUSDT', "2h")
+        time.sleep(2)
+        coin3a.dfall1('CELOUSDT', "2h")
+        time.sleep(2)
+        coin4a.dfall1('ARPAUSDT', "2h")
+        time.sleep(2)
+        coin5a.dfall1('LPTUSDT', "2h")
+        time.sleep(2)
+        coin6a.dfall1('KLAYUSDT', "2h")
+        time.sleep(2)
+
+        coin7a.dfall1('OMGUSDT', "2h")
+        time.sleep(2)
+        coin8a.dfall1('OPUSDT', "2h")
+        time.sleep(2)
+        coin9a.dfall1('UNFIUSDT', "2h")
+        time.sleep(2)
+        coin11a.dfall1('ARUSDT', "2h")
+        time.sleep(2)
+        coin12a.dfall1('DOTUSDT', "2h")
+        time.sleep(2)
+        coin13a.dfall1('ETCUSDT', "2h")
+        time.sleep(2)
+        coin14a.dfall1('ALGOUSDT', "2h")
+        time.sleep(2)
+        coin15a.dfall1('TRXUSDT', "2h")
+        time.sleep(2)
+        coin16a.dfall1('LRCUSDT', "2h")
+        time.sleep(2)
+        coin17a.dfall1('SANDUSDT', "2h")
+        time.sleep(2)
+
+        coin18a.dfall1('YFIUSDT', "2h")
+        time.sleep(2)
+        coin19a.dfall1('MASKUSDT', "2h")
+        time.sleep(2)
+
+        coin20a.dfall1('SUSHIUSDT', "2h")
+        time.sleep(2)
+        coin21a.dfall1('NEARUSDT', "2h")
+        time.sleep(2)
+
+        coin22a.dfall1('MATICUSDT', "2h")
+        time.sleep(2)
+        coin23a.dfall1('BELUSDT', "2h")
+
+
+
+
+        coin2b.dfall1('API3USDT', "4h")
+        time.sleep(2)
+        coin1b.dfall1('WOOUSDT', "4h")
+        time.sleep(2)
+        coin3b.dfall1('CELOUSDT', "4h")
+        time.sleep(2)
+        coin4b.dfall1('ARPAUSDT', "4h")
+        time.sleep(2)
+        coin5b.dfall1('LPTUSDT', "4h")
+        time.sleep(2)
+        coin6b.dfall1('KLAYUSDT', "4h")
+        time.sleep(2)
+
+        coin7b.dfall1('OMGUSDT', "4h")
+        time.sleep(2)
+        coin8b.dfall1('OPUSDT', "4h")
+        time.sleep(2)
+        coin9b.dfall1('UNFIUSDT', "4h")
+        time.sleep(2)
+        coin11b.dfall1('ARUSDT', "4h")
+        time.sleep(2)
+        coin12b.dfall1('DOTUSDT', "4h")
+        time.sleep(2)
+        coin13b.dfall1('ETCUSDT', "4h")
+        time.sleep(2)
+        coin14b.dfall1('ALGOUSDT', "4h")
+        time.sleep(2)
+        coin15b.dfall1('TRXUSDT', "4h")
+        time.sleep(2)
+        coin16b.dfall1('LRCUSDT', "4h")
+        time.sleep(2)
+        coin17b.dfall1('SANDUSDT', "4h")
+        time.sleep(2)
+
+        coin18b.dfall1('YFIUSDT', "4h")
+        time.sleep(2)
+        coin19b.dfall1('MASKUSDT', "4h")
+        time.sleep(2)
+
+        coin20b.dfall1('SUSHIUSDT', "4h")
+        time.sleep(2)
+        coin21b.dfall1('NEARUSDT', "4h")
+        time.sleep(2)
+
+        coin22b.dfall1('MATICUSDT', "4h")
+        time.sleep(2)
+        coin23b.dfall1('BELUSDT', "4h")
+
+    silme_sayma += 1
+
+
+
+
+
+
+    time.sleep(100)
